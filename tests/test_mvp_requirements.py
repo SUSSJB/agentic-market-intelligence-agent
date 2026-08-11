@@ -1,4 +1,4 @@
-"""Failing tests for the MVP Requirements contract (PRODMARKET-3).
+"""Tests for the MVP Requirements contract.
 
 Test intent
 -----------
@@ -12,19 +12,12 @@ market-intelligence agent's next-open forecast:
   spec's ``required_outputs`` and reject non-dicts, missing fields, and
   empty required values with :class:`RequirementsError`.
 
-TDD posture
+TDD history
 -----------
-Behaviour tests are marked ``xfail(strict=True, ...)`` because the stubs in
-``market_intel.mvp_requirements`` raise ``NotImplementedError``. This keeps
-the CI run deterministic (green) while the implementation ticket is open,
-and — thanks to ``strict=True`` — the moment the implementation makes a
-test pass, pytest will report an unexpected pass (XPASS) and turn the
-suite red until that test's ``xfail`` marker is removed. That is the
-mechanism that forces the follow-up PR to actually delete the markers
-rather than silently leaving them in place.
-
-The dataclass-shape tests are *not* xfailed: they lock the public contract
-today and must pass immediately.
+PRODMARKET-3 introduced these tests marked ``xfail(strict=True, ...)`` so
+CI stayed green while the implementation ticket (PRODMARKET-4) was open.
+PRODMARKET-4 delivers the implementation and removes the ``xfail`` markers
+so the behaviour tests now assert real behaviour on every run.
 
 External deps
 -------------
@@ -45,15 +38,8 @@ from market_intel.mvp_requirements import (
     validate_forecast_shape,
 )
 
-_PENDING = pytest.mark.xfail(
-    strict=True,
-    reason="Pending PRODMARKET-4 implementation of load_mvp_spec / validate_forecast_shape",
-    raises=NotImplementedError,
-)
-
-
 # ---------------------------------------------------------------------------
-# Dataclass shape — locks the public contract, must pass today
+# Dataclass shape — locks the public contract
 # ---------------------------------------------------------------------------
 
 
@@ -76,17 +62,15 @@ def test_requirements_error_is_valueerror_subclass():
 
 
 # ---------------------------------------------------------------------------
-# load_mvp_spec — happy path (pending implementation)
+# load_mvp_spec — happy path
 # ---------------------------------------------------------------------------
 
 
-@_PENDING
 def test_load_mvp_spec_returns_mvpspec_instance():
     spec = load_mvp_spec()
     assert isinstance(spec, MVPSpec)
 
 
-@_PENDING
 def test_load_mvp_spec_declares_required_input_contract():
     spec = load_mvp_spec()
     expected = {"symbol", "timestamp", "open", "close", "volume"}
@@ -95,7 +79,6 @@ def test_load_mvp_spec_declares_required_input_contract():
     )
 
 
-@_PENDING
 def test_load_mvp_spec_declares_required_output_contract():
     spec = load_mvp_spec()
     expected = {
@@ -110,7 +93,6 @@ def test_load_mvp_spec_declares_required_output_contract():
     )
 
 
-@_PENDING
 def test_load_mvp_spec_has_non_empty_ordered_requirements():
     spec = load_mvp_spec()
     assert isinstance(spec.requirements, tuple)
@@ -118,7 +100,6 @@ def test_load_mvp_spec_has_non_empty_ordered_requirements():
     assert all(isinstance(r, Requirement) for r in spec.requirements)
 
 
-@_PENDING
 def test_load_mvp_spec_requirement_ids_are_unique_and_non_empty():
     spec = load_mvp_spec()
     ids = [r.id for r in spec.requirements]
@@ -126,7 +107,6 @@ def test_load_mvp_spec_requirement_ids_are_unique_and_non_empty():
     assert len(ids) == len(set(ids)), f"requirement ids must be unique, got {ids}"
 
 
-@_PENDING
 def test_load_mvp_spec_requirement_categories_are_from_allowed_set():
     spec = load_mvp_spec()
     allowed = {"input", "output", "behaviour", "operability"}
@@ -139,13 +119,12 @@ def test_load_mvp_spec_requirement_categories_are_from_allowed_set():
 # ---------------------------------------------------------------------------
 
 
-@_PENDING
 def test_load_mvp_spec_is_deterministic_across_calls():
     assert load_mvp_spec() == load_mvp_spec()
 
 
 # ---------------------------------------------------------------------------
-# validate_forecast_shape — happy paths (pending implementation)
+# validate_forecast_shape — happy paths
 # ---------------------------------------------------------------------------
 
 
@@ -153,14 +132,12 @@ def _valid_payload(spec: MVPSpec) -> dict[str, object]:
     return {name: f"value-{name}" for name in spec.required_outputs}
 
 
-@_PENDING
 def test_validate_forecast_shape_accepts_payload_with_all_required_fields():
     spec = load_mvp_spec()
     payload = _valid_payload(spec)
     validate_forecast_shape(payload)  # must not raise
 
 
-@_PENDING
 def test_validate_forecast_shape_accepts_payload_with_extra_fields():
     spec = load_mvp_spec()
     payload = _valid_payload(spec)
@@ -169,11 +146,10 @@ def test_validate_forecast_shape_accepts_payload_with_extra_fields():
 
 
 # ---------------------------------------------------------------------------
-# validate_forecast_shape — edge cases (pending implementation)
+# validate_forecast_shape — edge cases
 # ---------------------------------------------------------------------------
 
 
-@_PENDING
 @pytest.mark.parametrize(
     "not_a_dict",
     [None, [], "forecast", 42, 3.14, ("symbol", "predicted_open")],
@@ -184,7 +160,6 @@ def test_validate_forecast_shape_rejects_non_dict_payloads(not_a_dict):
         validate_forecast_shape(not_a_dict)  # type: ignore[arg-type]
 
 
-@_PENDING
 def test_validate_forecast_shape_rejects_missing_required_field():
     spec = load_mvp_spec()
     assert spec.required_outputs, "spec must have at least one required output"
@@ -197,7 +172,6 @@ def test_validate_forecast_shape_rejects_missing_required_field():
     assert missing in str(exc_info.value)
 
 
-@_PENDING
 def test_validate_forecast_shape_rejects_empty_required_value():
     spec = load_mvp_spec()
     payload = _valid_payload(spec)
@@ -207,7 +181,6 @@ def test_validate_forecast_shape_rejects_empty_required_value():
         validate_forecast_shape(payload)
 
 
-@_PENDING
 def test_validate_forecast_shape_rejects_none_required_value():
     spec = load_mvp_spec()
     payload = _valid_payload(spec)
@@ -215,3 +188,195 @@ def test_validate_forecast_shape_rejects_none_required_value():
 
     with pytest.raises(RequirementsError):
         validate_forecast_shape(payload)
+
+
+# ---------------------------------------------------------------------------
+# validate_forecast_shape — additional edge / failure-path coverage
+# ---------------------------------------------------------------------------
+
+
+def test_validate_forecast_shape_rejects_all_fields_missing():
+    with pytest.raises(RequirementsError) as exc_info:
+        validate_forecast_shape({})
+    msg = str(exc_info.value)
+    for field in load_mvp_spec().required_outputs:
+        assert field in msg
+
+
+def test_validate_forecast_shape_accepts_non_string_non_empty_values():
+    # Numeric and structured values are legitimate for fields like
+    # ``predicted_open`` and ``confidence`` — only empty strings and None
+    # are treated as empty.
+    spec = load_mvp_spec()
+    payload: dict[str, object] = _valid_payload(spec)
+    payload["predicted_open"] = 187.42
+    payload["confidence"] = 0.0  # a zero confidence is still a real value
+    payload["symbol"] = "AAPL"
+    validate_forecast_shape(payload)
+
+
+# ---------------------------------------------------------------------------
+# Immutability of the canonical spec (frozen dataclass guarantees)
+# ---------------------------------------------------------------------------
+
+
+def test_requirement_instance_is_immutable():
+    req = Requirement(id="X", title="t", description="d", category="input")
+    with pytest.raises(dataclasses.FrozenInstanceError):
+        req.title = "changed"  # type: ignore[misc]
+
+
+def test_mvpspec_instance_is_immutable():
+    spec = load_mvp_spec()
+    with pytest.raises(dataclasses.FrozenInstanceError):
+        spec.required_inputs = ()  # type: ignore[misc]
+
+
+def test_mvpspec_field_containers_are_tuples():
+    # Tuples are immutable, so downstream callers cannot mutate the canonical
+    # spec accidentally.
+    spec = load_mvp_spec()
+    assert isinstance(spec.required_inputs, tuple)
+    assert isinstance(spec.required_outputs, tuple)
+    assert isinstance(spec.requirements, tuple)
+
+
+def test_requirement_is_hashable():
+    # Frozen dataclasses should be hashable so callers can store them in sets
+    # or use them as dict keys.
+    req = Requirement(id="X", title="t", description="d", category="input")
+    assert hash(req) == hash(req)
+    assert {req} == {req}
+
+
+# ---------------------------------------------------------------------------
+# Canonical requirement content — MVP-R1..MVP-R4 with category coverage
+# ---------------------------------------------------------------------------
+
+
+def test_load_mvp_spec_contains_canonical_requirement_ids():
+    spec = load_mvp_spec()
+    ids = {r.id for r in spec.requirements}
+    assert {"MVP-R1", "MVP-R2", "MVP-R3", "MVP-R4"}.issubset(ids)
+
+
+def test_load_mvp_spec_covers_all_allowed_categories():
+    spec = load_mvp_spec()
+    categories = {r.category for r in spec.requirements}
+    assert categories == {"input", "output", "behaviour", "operability"}
+
+
+def test_load_mvp_spec_requirement_titles_and_descriptions_are_non_empty():
+    spec = load_mvp_spec()
+    for r in spec.requirements:
+        assert r.title.strip(), f"requirement {r.id} has empty title"
+        assert r.description.strip(), f"requirement {r.id} has empty description"
+
+
+def test_mvp_r3_addresses_market_movement_insights_for_analysts():
+    # PRODMARKET-4 explicitly ships MVP-R3 for delivering detailed
+    # market-movement insights to financial analysts — pin the intent so a
+    # future refactor cannot silently drop it.
+    spec = load_mvp_spec()
+    r3 = next((r for r in spec.requirements if r.id == "MVP-R3"), None)
+    assert r3 is not None, "MVP-R3 must be present in the canonical spec"
+    assert r3.category == "behaviour"
+    text = (r3.title + " " + r3.description).lower()
+    assert any(kw in text for kw in ("market", "insight", "driver", "move"))
+
+
+# ---------------------------------------------------------------------------
+# load_mvp_spec — determinism across independent instances
+# ---------------------------------------------------------------------------
+
+
+def test_load_mvp_spec_repeated_calls_have_equal_requirements():
+    a = load_mvp_spec()
+    b = load_mvp_spec()
+    assert a.requirements == b.requirements
+    assert a.required_inputs == b.required_inputs
+    assert a.required_outputs == b.required_outputs
+
+
+# ---------------------------------------------------------------------------
+# validate_forecast_shape — error message aggregates all offending fields
+# ---------------------------------------------------------------------------
+
+
+def test_validate_forecast_shape_reports_multiple_missing_fields():
+    spec = load_mvp_spec()
+    payload = _valid_payload(spec)
+    dropped = list(spec.required_outputs[:2])
+    for f in dropped:
+        del payload[f]
+
+    with pytest.raises(RequirementsError) as exc_info:
+        validate_forecast_shape(payload)
+    msg = str(exc_info.value)
+    for f in dropped:
+        assert f in msg
+
+
+def test_validate_forecast_shape_reports_multiple_empty_fields():
+    spec = load_mvp_spec()
+    payload = _valid_payload(spec)
+    payload[spec.required_outputs[0]] = ""
+    payload[spec.required_outputs[1]] = None
+
+    with pytest.raises(RequirementsError) as exc_info:
+        validate_forecast_shape(payload)
+    msg = str(exc_info.value)
+    assert spec.required_outputs[0] in msg
+    assert spec.required_outputs[1] in msg
+
+
+def test_validate_forecast_shape_non_dict_error_names_actual_type():
+    with pytest.raises(RequirementsError) as exc_info:
+        validate_forecast_shape("not a dict")  # type: ignore[arg-type]
+    assert "str" in str(exc_info.value)
+
+
+def test_validate_forecast_shape_accepts_whitespace_string_values():
+    # A whitespace-only string is not an empty string — the contract only
+    # rejects None and the literal empty string. Pin this so a future
+    # refactor doesn't silently tighten the rule and break callers.
+    spec = load_mvp_spec()
+    payload: dict[str, object] = _valid_payload(spec)
+    payload[spec.required_outputs[0]] = " "
+    validate_forecast_shape(payload)
+
+
+def test_validate_forecast_shape_accepts_zero_and_false_values():
+    # ``0``, ``0.0``, and ``False`` are legitimate non-empty values — the
+    # contract only rejects None and the literal empty string.
+    spec = load_mvp_spec()
+    payload: dict[str, object] = _valid_payload(spec)
+    payload["confidence"] = 0
+    payload["predicted_open"] = 0.0
+    payload["generated_at"] = False
+    validate_forecast_shape(payload)
+
+
+def test_validate_forecast_shape_does_not_mutate_payload():
+    spec = load_mvp_spec()
+    payload = _valid_payload(spec)
+    snapshot = dict(payload)
+    validate_forecast_shape(payload)
+    assert payload == snapshot
+
+
+# ---------------------------------------------------------------------------
+# Module surface — __all__ pins the public API
+# ---------------------------------------------------------------------------
+
+
+def test_module_exports_expected_public_symbols():
+    from market_intel import mvp_requirements
+
+    assert set(mvp_requirements.__all__) == {
+        "MVPSpec",
+        "Requirement",
+        "RequirementsError",
+        "load_mvp_spec",
+        "validate_forecast_shape",
+    }

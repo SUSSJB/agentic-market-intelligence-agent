@@ -65,3 +65,35 @@ next-open forecast (PRODMARKET-3).
   `xfail(strict=True, raises=<expected error>)` so the CI signal is
   deterministic and future PRs cannot silently leave stale xfail markers
   in place.
+
+- **PRODMARKET-4** Step-003 [DEV] Implement feature behavior to satisfy tests — src/market_intel/mvp_requirements.py, tests/test_mvp_requirements.py
+
+Delivered the production implementation of the MVP contract for the
+next-open forecast and unblocked the previously xfailed behaviour tests
+(PRODMARKET-4).
+
+**Files:**
+- `src/market_intel/mvp_requirements.py` — real implementations of
+  `load_mvp_spec()` and `validate_forecast_shape()`. The spec now returns
+  a deterministic `MVPSpec` with the required OHLCV input contract, the
+  five-field forecast output contract, and four canonical `Requirement`
+  entries (`MVP-R1..MVP-R4`) spanning the `input`, `output`, `behaviour`,
+  and `operability` categories — including MVP-R3 for delivering detailed
+  market-movement insights to financial analysts.
+- `tests/test_mvp_requirements.py` — the 18 behaviour tests introduced in
+  PRODMARKET-3 have had their `xfail(strict=True, raises=NotImplementedError)`
+  markers removed and now assert real behaviour on every run. Two
+  additional coverage tests were added: one edge case (`{}` payload lists
+  every missing field in the error message) and one contract test
+  confirming non-string, non-empty values (e.g. `float`, `0.0`) are
+  accepted for numeric output fields. Full file: 23 tests, all passing.
+
+**Behaviour highlights:**
+- `load_mvp_spec()` is a pure factory over module-level constants, so
+  repeated calls return equal `MVPSpec` instances (satisfies the
+  determinism requirement).
+- `validate_forecast_shape(payload)` rejects non-dicts, missing required
+  output fields (naming every missing field in the error message), and
+  empty required values (`None` or empty string). Extra fields on a
+  payload are permitted so downstream enrichers can attach debug metadata
+  without breaking validation.

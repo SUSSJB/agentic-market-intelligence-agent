@@ -1,19 +1,23 @@
-"""MVP Requirements: contract stubs for the market-intelligence agent's MVP.
+"""MVP Requirements: canonical contract for the market-intelligence agent's MVP.
 
 This module defines the *shape* of the MVP contract (requirements, input and
-output contracts, and a validator for candidate forecast payloads). It is
-introduced as part of the TDD scaffolding ticket (PRODMARKET-3): the tests
-in ``tests/test_mvp_requirements.py`` describe the intended behaviour, and
-every callable here raises :class:`NotImplementedError` so that the tests
-fail deterministically until the implementation ticket lands.
+output contracts, and a validator for candidate forecast payloads).
 
-No production behaviour lives in this file yet — only names, types, and
-docstrings that lock the contract for the next ticket.
+Public surface:
+    * :class:`Requirement` — a single MVP requirement (frozen dataclass).
+    * :class:`MVPSpec` — the canonical, immutable spec (frozen dataclass).
+    * :class:`RequirementsError` — raised when a payload violates the contract.
+    * :func:`load_mvp_spec` — returns the deterministic MVP spec.
+    * :func:`validate_forecast_shape` — validates a candidate forecast payload.
 """
 from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Any
+
+_ALLOWED_CATEGORIES: frozenset[str] = frozenset(
+    {"input", "output", "behaviour", "operability"}
+)
 
 
 class RequirementsError(ValueError):
@@ -56,12 +60,73 @@ class MVPSpec:
     requirements: tuple[Requirement, ...]
 
 
+_REQUIRED_INPUTS: tuple[str, ...] = (
+    "symbol",
+    "timestamp",
+    "open",
+    "close",
+    "volume",
+)
+
+_REQUIRED_OUTPUTS: tuple[str, ...] = (
+    "symbol",
+    "predicted_open",
+    "forecast_for",
+    "confidence",
+    "generated_at",
+)
+
+_REQUIREMENTS: tuple[Requirement, ...] = (
+    Requirement(
+        id="MVP-R1",
+        title="Accept OHLCV observations",
+        description=(
+            "The agent must accept market observations carrying symbol, "
+            "timestamp, open, close, and volume fields."
+        ),
+        category="input",
+    ),
+    Requirement(
+        id="MVP-R2",
+        title="Emit next-open forecast payload",
+        description=(
+            "Every forecast must include the target symbol, predicted open, "
+            "the session it forecasts, a confidence score, and a generation "
+            "timestamp."
+        ),
+        category="output",
+    ),
+    Requirement(
+        id="MVP-R3",
+        title="Deliver detailed market movement insights",
+        description=(
+            "Forecasts must summarise the drivers behind predicted moves so "
+            "financial analysts can act on them for investment decisions."
+        ),
+        category="behaviour",
+    ),
+    Requirement(
+        id="MVP-R4",
+        title="Deterministic, auditable runs",
+        description=(
+            "Given the same inputs and configuration, the agent must produce "
+            "the same forecast so runs are reproducible and auditable."
+        ),
+        category="operability",
+    ),
+)
+
+
 def load_mvp_spec() -> MVPSpec:
     """Return the canonical, immutable MVP spec for the agent.
 
-    Must be deterministic — repeated calls return equal specs.
+    Deterministic: repeated calls return equal :class:`MVPSpec` instances.
     """
-    raise NotImplementedError("load_mvp_spec is defined by PRODMARKET-3 tests only")
+    return MVPSpec(
+        required_inputs=_REQUIRED_INPUTS,
+        required_outputs=_REQUIRED_OUTPUTS,
+        requirements=_REQUIREMENTS,
+    )
 
 
 def validate_forecast_shape(payload: dict[str, Any]) -> None:
@@ -69,11 +134,32 @@ def validate_forecast_shape(payload: dict[str, Any]) -> None:
 
     Raises:
         RequirementsError: If ``payload`` is not a dict, is missing any
-            required output field, or has empty values for required fields.
+            required output field, or has empty values (``None`` or empty
+            string) for required fields.
     """
-    raise NotImplementedError(
-        "validate_forecast_shape is defined by PRODMARKET-3 tests only"
-    )
+    if not isinstance(payload, dict):
+        raise RequirementsError(
+            f"forecast payload must be a dict, got {type(payload).__name__}"
+        )
+
+    spec = load_mvp_spec()
+    missing = [field for field in spec.required_outputs if field not in payload]
+    if missing:
+        raise RequirementsError(
+            f"forecast payload missing required field(s): {', '.join(missing)}"
+        )
+
+    empty = [
+        field
+        for field in spec.required_outputs
+        if payload[field] is None
+        or (isinstance(payload[field], str) and payload[field] == "")
+    ]
+    if empty:
+        raise RequirementsError(
+            f"forecast payload has empty value(s) for required field(s): "
+            f"{', '.join(empty)}"
+        )
 
 
 __all__ = [
