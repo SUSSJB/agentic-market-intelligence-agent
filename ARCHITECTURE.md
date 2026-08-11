@@ -35,6 +35,7 @@ onboarding for the market-intelligence agent (PRODMARKET-2).
   `Settings` loader treat that file as the single source of truth for the environment contract.
 
 ## MVP Requirements
+- **PRODMARKET-3** Step-002 [TDD][MVP Requirements] Create failing tests and coverage — ARCHITECTURE.md, src/market_intel/mvp_requirements.py, tests/test_mvp_requirements.py
 - **PRODMARKET-3** Step-002 [TDD] Failing tests and coverage — src/market_intel/mvp_requirements.py, tests/test_mvp_requirements.py
 
 Introduced the test-first scaffolding for the MVP contract of the
