@@ -245,3 +245,37 @@ contract of the market-intelligence agent (PRODMARKET-9).
 ## Market-Intensity Agent
 - **PRODMARKET-12** Step-011 [DEV][Market-Intensity Agent] Implement feature behavior to satisfy tests — src/market_intel/market_intensity_agent.py, tests/test_market_intensity_agent.py
 - **PRODMARKET-11** Step-010 [TDD][Market-Intensity Agent] Create failing tests and coverage — src/market_intel/market_intensity_agent.py, tests/test_market_intensity_agent.py
+
+## Implementation Roadmap
+- **PRODMARKET-14** Step-013 [DEV][Implementation Roadmap] Implement feature behavior to satisfy tests — ARCHITECTURE.md, src/market_intel/implementation_roadmap.py, tests/test_implementation_roadmap.py
+- **PRODMARKET-13** Step-012 [TDD][Implementation Roadmap] Create failing tests and coverage — src/market_intel/implementation_roadmap.py, tests/test_implementation_roadmap.py
+
+Delivered the production implementation of the Implementation Roadmap contract
+and unblocked the previously xfailed behaviour tests (PRODMARKET-14).
+
+**Files:**
+- `src/market_intel/implementation_roadmap.py` — real implementations of
+  `load_implementation_roadmap()` and `validate_roadmap_progress()`. The roadmap
+  returns a deterministic `ImplementationRoadmap` with 4 `RoadmapMilestone` entries
+  spanning all four delivery phases (planning, development, testing, deployment),
+  canonical ids `RM-M1..RM-M4`, unique non-empty titles and descriptions, priorities
+  from `{high, medium, low}` (including at least one high-priority milestone),
+  dependency chains referencing only known milestone ids, and
+  `required_progress_fields` of `(milestone_id, status, completed_at, owner, evidence)`.
+- `tests/test_implementation_roadmap.py` — the 35 behaviour tests introduced in
+  PRODMARKET-13 have had their `xfail(strict=True, raises=NotImplementedError)`
+  markers removed and now assert real behaviour on every run. Full file: 50 tests,
+  all passing.
+
+**Behaviour highlights:**
+- `load_implementation_roadmap()` is a pure factory over module-level constants,
+  so repeated calls return equal `ImplementationRoadmap` instances (satisfies the
+  determinism requirement).
+- `validate_roadmap_progress(payload)` rejects non-dicts (naming the actual type),
+  missing required fields (aggregating every offending field into the error),
+  empty required values (`None` or empty string), unknown `milestone_id`s (naming
+  the value), and disallowed statuses. Whitespace-only strings are accepted.
+  Extra fields are permitted and the payload is not mutated.
+- Acceptance intent satisfied: financial analysts receive detailed market movement
+  insights via RM-M2 (development phase, high priority, covers OHLCV ingestion,
+  forecast model, and MVP requirements for informed investment decisions).
