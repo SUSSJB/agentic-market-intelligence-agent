@@ -33,3 +33,33 @@ onboarding for the market-intelligence agent (PRODMARKET-2).
 - Tests live under `tests/`, mirroring source structure.
 - All required runtime env vars are declared in `.env.example` — the verify script and the
   `Settings` loader treat that file as the single source of truth for the environment contract.
+
+## MVP Requirements
+- **PRODMARKET-3** Step-002 [TDD] Failing tests and coverage — src/market_intel/mvp_requirements.py, tests/test_mvp_requirements.py
+
+Introduced the test-first scaffolding for the MVP contract of the
+next-open forecast (PRODMARKET-3).
+
+**Files:**
+- `src/market_intel/mvp_requirements.py` — contract stubs only:
+  `Requirement` and `MVPSpec` frozen dataclasses, `RequirementsError`
+  (subclasses `ValueError`), and `load_mvp_spec()` /
+  `validate_forecast_shape()` factories that raise `NotImplementedError`
+  until the implementation ticket lands.
+- `tests/test_mvp_requirements.py` — 21 tests. Three dataclass-shape and
+  error-type tests pass today and lock the public contract. Eighteen
+  behaviour tests are marked
+  `pytest.mark.xfail(strict=True, raises=NotImplementedError, reason="Pending PRODMARKET-4 …")`
+  so CI stays deterministic (green) while the implementation is open;
+  once the implementation makes any of them pass, `strict=True` flips it
+  to XPASS and turns CI red until the marker is removed — forcing the
+  follow-up PR to actually delete the pending markers.
+
+**Conventions:**
+- New agent-domain modules live under `src/market_intel/<component>.py` with
+  a matching `tests/test_<component>.py`, mirroring the layout established
+  by `config.py` / `test_config.py`.
+- TDD scaffolding tickets should ship failing tests as
+  `xfail(strict=True, raises=<expected error>)` so the CI signal is
+  deterministic and future PRs cannot silently leave stale xfail markers
+  in place.
