@@ -89,20 +89,13 @@ def test_module_exports_expected_public_symbols():
 # load_post_measure_spec — behaviour tests (xfail until PRODMARKET-10)
 # ---------------------------------------------------------------------------
 
-_XFAIL_IMPL = pytest.mark.xfail(
-    strict=True,
-    raises=NotImplementedError,
-    reason="Pending PRODMARKET-10 Post-Measure Requirements implementation",
-)
 
 
-@_XFAIL_IMPL
 def test_load_post_measure_spec_returns_spec_instance():
     spec = load_post_measure_spec()
     assert isinstance(spec, PostMeasureSpec)
 
 
-@_XFAIL_IMPL
 def test_load_post_measure_spec_declares_required_result_fields():
     spec = load_post_measure_spec()
     expected = {
@@ -118,7 +111,6 @@ def test_load_post_measure_spec_declares_required_result_fields():
     )
 
 
-@_XFAIL_IMPL
 def test_load_post_measure_spec_has_non_empty_ordered_requirements():
     spec = load_post_measure_spec()
     assert isinstance(spec.requirements, tuple)
@@ -126,7 +118,6 @@ def test_load_post_measure_spec_has_non_empty_ordered_requirements():
     assert all(isinstance(r, MeasureRequirement) for r in spec.requirements)
 
 
-@_XFAIL_IMPL
 def test_load_post_measure_spec_requirement_ids_are_unique_and_non_empty():
     spec = load_post_measure_spec()
     ids = [r.id for r in spec.requirements]
@@ -134,7 +125,6 @@ def test_load_post_measure_spec_requirement_ids_are_unique_and_non_empty():
     assert len(ids) == len(set(ids)), f"requirement ids must be unique, got {ids}"
 
 
-@_XFAIL_IMPL
 def test_load_post_measure_spec_categories_are_from_allowed_set():
     spec = load_post_measure_spec()
     allowed = {"accuracy", "completeness", "timeliness", "consistency"}
@@ -142,14 +132,12 @@ def test_load_post_measure_spec_categories_are_from_allowed_set():
     assert not bad, f"requirements with disallowed category: {bad}"
 
 
-@_XFAIL_IMPL
 def test_load_post_measure_spec_covers_all_allowed_categories():
     spec = load_post_measure_spec()
     categories = {r.category for r in spec.requirements}
     assert categories == {"accuracy", "completeness", "timeliness", "consistency"}
 
 
-@_XFAIL_IMPL
 def test_load_post_measure_spec_requirement_titles_and_descriptions_non_empty():
     spec = load_post_measure_spec()
     for r in spec.requirements:
@@ -157,12 +145,10 @@ def test_load_post_measure_spec_requirement_titles_and_descriptions_non_empty():
         assert r.description.strip(), f"requirement {r.id} has empty description"
 
 
-@_XFAIL_IMPL
 def test_load_post_measure_spec_is_deterministic_across_calls():
     assert load_post_measure_spec() == load_post_measure_spec()
 
 
-@_XFAIL_IMPL
 def test_load_post_measure_spec_repeated_calls_have_equal_requirements():
     a = load_post_measure_spec()
     b = load_post_measure_spec()
@@ -170,28 +156,24 @@ def test_load_post_measure_spec_repeated_calls_have_equal_requirements():
     assert a.required_result_fields == b.required_result_fields
 
 
-@_XFAIL_IMPL
 def test_load_post_measure_spec_field_containers_are_tuples():
     spec = load_post_measure_spec()
     assert isinstance(spec.required_result_fields, tuple)
     assert isinstance(spec.requirements, tuple)
 
 
-@_XFAIL_IMPL
 def test_post_measure_spec_instance_is_immutable():
     spec = load_post_measure_spec()
     with pytest.raises(dataclasses.FrozenInstanceError):
         spec.required_result_fields = ()  # type: ignore[misc]
 
 
-@_XFAIL_IMPL
 def test_load_post_measure_spec_contains_canonical_requirement_ids():
     spec = load_post_measure_spec()
     ids = {r.id for r in spec.requirements}
     assert {"PMR-R1", "PMR-R2", "PMR-R3", "PMR-R4"}.issubset(ids)
 
 
-@_XFAIL_IMPL
 def test_load_post_measure_spec_has_accuracy_requirement():
     spec = load_post_measure_spec()
     accuracy_reqs = [r for r in spec.requirements if r.category == "accuracy"]
@@ -200,7 +182,6 @@ def test_load_post_measure_spec_has_accuracy_requirement():
     assert any(kw in text for kw in ("accura", "precision", "correct", "valid"))
 
 
-@_XFAIL_IMPL
 def test_load_post_measure_spec_has_completeness_requirement():
     spec = load_post_measure_spec()
     completeness_reqs = [r for r in spec.requirements if r.category == "completeness"]
@@ -211,7 +192,6 @@ def test_load_post_measure_spec_has_completeness_requirement():
     assert any(kw in text for kw in ("complet", "missing", "coverage", "full"))
 
 
-@_XFAIL_IMPL
 def test_load_post_measure_spec_has_timeliness_requirement():
     spec = load_post_measure_spec()
     timeliness_reqs = [r for r in spec.requirements if r.category == "timeliness"]
@@ -222,7 +202,6 @@ def test_load_post_measure_spec_has_timeliness_requirement():
     assert any(kw in text for kw in ("time", "latenc", "freshn", "staleness", "delay"))
 
 
-@_XFAIL_IMPL
 def test_load_post_measure_spec_has_consistency_requirement():
     spec = load_post_measure_spec()
     consistency_reqs = [r for r in spec.requirements if r.category == "consistency"]
@@ -238,14 +217,12 @@ def test_load_post_measure_spec_has_consistency_requirement():
 # ---------------------------------------------------------------------------
 
 
-@_XFAIL_IMPL
 def test_validate_measure_result_accepts_payload_with_all_required_fields():
     spec = load_post_measure_spec()
     payload = {name: f"value-{name}" for name in spec.required_result_fields}
     validate_measure_result(payload)  # must not raise
 
 
-@_XFAIL_IMPL
 def test_validate_measure_result_accepts_payload_with_extra_fields():
     spec = load_post_measure_spec()
     payload = {name: f"value-{name}" for name in spec.required_result_fields}
@@ -253,7 +230,6 @@ def test_validate_measure_result_accepts_payload_with_extra_fields():
     validate_measure_result(payload)
 
 
-@_XFAIL_IMPL
 @pytest.mark.parametrize(
     "not_a_dict",
     [None, [], "result", 42, 3.14, ("measure_id", "metric_value")],
@@ -264,14 +240,12 @@ def test_validate_measure_result_rejects_non_dict_payloads(not_a_dict):
         validate_measure_result(not_a_dict)  # type: ignore[arg-type]
 
 
-@_XFAIL_IMPL
 def test_validate_measure_result_non_dict_error_names_actual_type():
     with pytest.raises(PostMeasureError) as exc_info:
         validate_measure_result("not a dict")  # type: ignore[arg-type]
     assert "str" in str(exc_info.value)
 
 
-@_XFAIL_IMPL
 def test_validate_measure_result_rejects_missing_required_field():
     spec = load_post_measure_spec()
     assert spec.required_result_fields, "spec must have at least one required field"
@@ -284,7 +258,6 @@ def test_validate_measure_result_rejects_missing_required_field():
     assert missing in str(exc_info.value)
 
 
-@_XFAIL_IMPL
 def test_validate_measure_result_rejects_empty_required_value():
     spec = load_post_measure_spec()
     payload = {name: f"value-{name}" for name in spec.required_result_fields}
@@ -294,7 +267,6 @@ def test_validate_measure_result_rejects_empty_required_value():
         validate_measure_result(payload)
 
 
-@_XFAIL_IMPL
 def test_validate_measure_result_rejects_none_required_value():
     spec = load_post_measure_spec()
     payload = {name: f"value-{name}" for name in spec.required_result_fields}
@@ -304,7 +276,6 @@ def test_validate_measure_result_rejects_none_required_value():
         validate_measure_result(payload)
 
 
-@_XFAIL_IMPL
 def test_validate_measure_result_rejects_all_fields_missing():
     with pytest.raises(PostMeasureError) as exc_info:
         validate_measure_result({})
@@ -314,7 +285,6 @@ def test_validate_measure_result_rejects_all_fields_missing():
         assert field in msg
 
 
-@_XFAIL_IMPL
 def test_validate_measure_result_reports_multiple_missing_fields():
     spec = load_post_measure_spec()
     payload = {name: f"value-{name}" for name in spec.required_result_fields}
@@ -329,7 +299,6 @@ def test_validate_measure_result_reports_multiple_missing_fields():
         assert f in msg
 
 
-@_XFAIL_IMPL
 def test_validate_measure_result_reports_multiple_empty_fields():
     spec = load_post_measure_spec()
     payload = {name: f"value-{name}" for name in spec.required_result_fields}
@@ -343,7 +312,6 @@ def test_validate_measure_result_reports_multiple_empty_fields():
     assert spec.required_result_fields[1] in msg
 
 
-@_XFAIL_IMPL
 def test_validate_measure_result_accepts_non_string_non_empty_values():
     spec = load_post_measure_spec()
     payload = {name: f"value-{name}" for name in spec.required_result_fields}
@@ -352,7 +320,6 @@ def test_validate_measure_result_accepts_non_string_non_empty_values():
     validate_measure_result(payload)
 
 
-@_XFAIL_IMPL
 def test_validate_measure_result_accepts_whitespace_string_values():
     spec = load_post_measure_spec()
     payload = {name: f"value-{name}" for name in spec.required_result_fields}
@@ -360,7 +327,6 @@ def test_validate_measure_result_accepts_whitespace_string_values():
     validate_measure_result(payload)
 
 
-@_XFAIL_IMPL
 def test_validate_measure_result_accepts_zero_and_false_values():
     spec = load_post_measure_spec()
     payload = {name: f"value-{name}" for name in spec.required_result_fields}
@@ -369,7 +335,6 @@ def test_validate_measure_result_accepts_zero_and_false_values():
     validate_measure_result(payload)
 
 
-@_XFAIL_IMPL
 def test_validate_measure_result_does_not_mutate_payload():
     spec = load_post_measure_spec()
     payload = {name: f"value-{name}" for name in spec.required_result_fields}
