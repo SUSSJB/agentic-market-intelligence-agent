@@ -378,3 +378,76 @@ def test_market_intensity_error_carries_message():
 def test_market_intensity_error_is_catchable_as_valueerror():
     with pytest.raises(ValueError):
         raise MarketIntensityError("bad payload")
+
+
+# ---------------------------------------------------------------------------
+# PRODMARKET-12 supplemental: edge-case coverage for analyze_market_intensity
+# ---------------------------------------------------------------------------
+
+
+def test_analyze_market_intensity_accepts_false_value():
+    """False is explicitly listed as an accepted (non-empty) value in the contract."""
+    spec = load_market_intensity_spec()
+    payload = {name: f"value-{name}" for name in spec.required_analysis_fields}
+    payload["intensity_score"] = 0.5
+    payload[spec.required_analysis_fields[0]] = False
+    analyze_market_intensity(payload)  # must not raise
+
+
+def test_analyze_market_intensity_reports_both_missing_and_empty_fields():
+    """When a payload has both missing fields and empty fields, the error message
+    must mention both problems (joined by '; ')."""
+    spec = load_market_intensity_spec()
+    assert len(spec.required_analysis_fields) >= 2, "need at least 2 fields for this test"
+    missing_field = spec.required_analysis_fields[0]
+    empty_field = spec.required_analysis_fields[1]
+    payload = {name: f"value-{name}" for name in spec.required_analysis_fields}
+    payload["intensity_score"] = 0.5
+    del payload[missing_field]
+    payload[empty_field] = ""
+
+    with pytest.raises(MarketIntensityError) as exc_info:
+        analyze_market_intensity(payload)
+    msg = str(exc_info.value)
+    assert missing_field in msg
+    assert empty_field in msg
+    assert "; " in msg
+
+
+def test_analyze_market_intensity_error_message_uses_semicolon_separator():
+    """Errors for missing fields and empty fields are separated by '; ' when both occur."""
+    spec = load_market_intensity_spec()
+    fields = spec.required_analysis_fields
+    assert len(fields) >= 2
+    # drop one field (missing) and empty another — triggers two separate error clauses
+    payload = {name: "v" for name in fields}
+    del payload[fields[0]]
+    payload[fields[1]] = ""
+
+    with pytest.raises(MarketIntensityError) as exc_info:
+        analyze_market_intensity(payload)
+    assert "; " in str(exc_info.value)
+
+
+def test_analyze_market_intensity_accepts_integer_zero_for_any_required_field():
+    """0 (integer) is accepted for any required field — not treated as empty."""
+    spec = load_market_intensity_spec()
+    base_payload = {name: f"value-{name}" for name in spec.required_analysis_fields}
+    for field in spec.required_analysis_fields:
+        test_payload = dict(base_payload)
+        test_payload[field] = 0
+        analyze_market_intensity(test_payload)  # must not raise
+
+
+def test_load_market_intensity_spec_signals_field_is_immutable():
+    """The signals field on the frozen spec cannot be replaced."""
+    spec = load_market_intensity_spec()
+    with pytest.raises(dataclasses.FrozenInstanceError):
+        spec.signals = ()  # type: ignore[misc]
+
+
+def test_market_intensity_spec_equality_is_value_based():
+    """Two MarketIntensitySpec instances returned by successive calls are equal."""
+    a = load_market_intensity_spec()
+    b = load_market_intensity_spec()
+    assert a == b
