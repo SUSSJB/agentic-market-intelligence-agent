@@ -375,3 +375,51 @@ def test_validate_release_readiness_does_not_mutate_payload():
     except (ReleaseRequirementsError, NotImplementedError):
         pass
     assert payload == snapshot
+
+
+# ---------------------------------------------------------------------------
+# Additional contract tests added by PRODMARKET-7 tester
+# ---------------------------------------------------------------------------
+
+
+def test_release_requirement_equality_between_equal_instances():
+    a = ReleaseRequirement(id="P1", title="t", description="d", category="quality")
+    b = ReleaseRequirement(id="P1", title="t", description="d", category="quality")
+    assert a == b
+
+
+def test_release_requirement_inequality_between_different_instances():
+    a = ReleaseRequirement(id="P1", title="t", description="d", category="quality")
+    b = ReleaseRequirement(id="P2", title="t", description="d", category="quality")
+    assert a != b
+
+
+def test_release_requirements_error_carries_message():
+    msg = "missing field: release_id"
+    err = ReleaseRequirementsError(msg)
+    assert str(err) == msg
+
+
+def test_release_requirements_error_is_catchable_as_valueerror():
+    with pytest.raises(ValueError):
+        raise ReleaseRequirementsError("bad payload")
+
+
+def test_load_production_release_spec_raises_not_implemented_error():
+    with pytest.raises(NotImplementedError):
+        load_production_release_spec()
+
+
+def test_load_production_release_spec_not_implemented_message_references_prodmarket_8():
+    with pytest.raises(NotImplementedError, match="PRODMARKET-8"):
+        load_production_release_spec()
+
+
+def test_validate_release_readiness_raises_not_implemented_error():
+    with pytest.raises(NotImplementedError):
+        validate_release_readiness({})
+
+
+def test_validate_release_readiness_not_implemented_message_references_prodmarket_8():
+    with pytest.raises(NotImplementedError, match="PRODMARKET-8"):
+        validate_release_readiness({})
