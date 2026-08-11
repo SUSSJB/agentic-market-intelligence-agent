@@ -366,3 +366,108 @@ def test_validate_test_result_non_dict_error_names_actual_type():
     with pytest.raises(TestPlanError) as exc_info:
         validate_test_result("not a dict")  # type: ignore[arg-type]
     assert "str" in str(exc_info.value)
+
+
+# ---------------------------------------------------------------------------
+# Additional coverage: plan content, regression category, and extra edge cases
+# ---------------------------------------------------------------------------
+
+
+def test_load_acceptance_test_plan_has_exactly_seven_cases():
+    plan = load_acceptance_test_plan()
+    assert len(plan.cases) == 7, f"expected 7 cases, got {len(plan.cases)}"
+
+
+@pytest.mark.parametrize(
+    "case_id",
+    ["ATP-C1", "ATP-C2", "ATP-C3", "ATP-C4", "ATP-C5", "ATP-C6", "ATP-C7"],
+)
+def test_load_acceptance_test_plan_contains_expected_case_id(case_id):
+    plan = load_acceptance_test_plan()
+    ids = {c.id for c in plan.cases}
+    assert case_id in ids, f"{case_id} not found in plan; found: {sorted(ids)}"
+
+
+def test_load_acceptance_test_plan_covers_regression_category():
+    plan = load_acceptance_test_plan()
+    categories = {c.category for c in plan.cases}
+    assert "regression" in categories, f"regression category missing; got {categories}"
+
+
+def test_load_acceptance_test_plan_covers_all_four_mvp_requirements_explicitly():
+    plan = load_acceptance_test_plan()
+    covered = {rid for c in plan.cases for rid in c.covers}
+    for req in ("MVP-R1", "MVP-R2", "MVP-R3", "MVP-R4"):
+        assert req in covered, f"{req} not covered by any acceptance case"
+
+
+def test_load_acceptance_test_plan_has_four_required_result_fields():
+    plan = load_acceptance_test_plan()
+    assert len(plan.required_result_fields) == 4
+
+
+def test_validate_test_result_rejects_none_status():
+    plan = load_acceptance_test_plan()
+    payload = _valid_result(plan)
+    payload["status"] = None
+    with pytest.raises(TestPlanError):
+        validate_test_result(payload)
+
+
+def test_validate_test_result_rejects_none_case_id():
+    plan = load_acceptance_test_plan()
+    payload = _valid_result(plan)
+    payload["case_id"] = None
+    with pytest.raises(TestPlanError):
+        validate_test_result(payload)
+
+
+def test_validate_test_result_error_message_mentions_missing_field_name():
+    plan = load_acceptance_test_plan()
+    payload = _valid_result(plan)
+    del payload["evidence"]
+    with pytest.raises(TestPlanError) as exc_info:
+        validate_test_result(payload)
+    assert "evidence" in str(exc_info.value)
+
+
+def test_acceptance_case_covers_can_hold_multiple_requirements():
+    case = AcceptanceCase(
+        id="ATP-MULTI",
+        title="multi-req case",
+        given="g",
+        when="w",
+        then="t",
+        category="happy_path",
+        covers=("MVP-R1", "MVP-R2", "MVP-R3"),
+    )
+    assert len(case.covers) == 3
+    assert "MVP-R1" in case.covers
+    assert "MVP-R2" in case.covers
+
+
+def test_validate_test_result_rejects_empty_string_evidence():
+    plan = load_acceptance_test_plan()
+    payload = _valid_result(plan)
+    payload["evidence"] = ""
+    with pytest.raises(TestPlanError):
+        validate_test_result(payload)
+
+
+def test_validate_test_result_accepts_last_case_id():
+    plan = load_acceptance_test_plan()
+    payload = _valid_result(plan)
+    payload["case_id"] = plan.cases[-1].id
+    validate_test_result(payload)  # must not raise
+
+
+def test_validate_test_result_accepts_skipped_status_with_any_valid_case():
+    plan = load_acceptance_test_plan()
+    for case in plan.cases:
+        payload = {
+            "case_id": case.id,
+            "status": "skipped",
+            "executed_at": "2026-08-11T00:00:00Z",
+            "evidence": "skipped by CI",
+        }
+        validate_test_result(payload)  # must not raise
