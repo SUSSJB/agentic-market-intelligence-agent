@@ -212,6 +212,7 @@ contract of the market-intelligence agent (PRODMARKET-7).
   leave stale xfail markers in place.
 
 ## Post-Measure Requirements
+- **PRODMARKET-10** Step-009 [DEV][Post-Measure Requirements] Implement feature behavior to satisfy tests — src/market_intel/post_measure_requirements.py, tests/test_post_measure_requirements.py
 - **PRODMARKET-9** Step-008 [TDD][Post-Measure Requirements] Create failing tests and coverage — ARCHITECTURE.md, src/market_intel/post_measure_requirements.py, tests/test_post_measure_requirements.py
 - **PRODMARKET-9** Step-008 [TDD][Post-Measure Requirements] Create failing tests and coverage — src/market_intel/post_measure_requirements.py, tests/test_post_measure_requirements.py
 
