@@ -105,3 +105,50 @@ def test_python_version_matches_pyproject():
     assert sys.version_info >= (3, 11), (
         f"tests must run on Python 3.11+, got {sys.version_info}"
     )
+
+
+def test_verify_script_fails_when_required_env_key_missing(tmp_path: Path):
+    """Removing a required key from .env.example must break the check."""
+    import shutil
+
+    for name in ("scripts", "src", "pyproject.toml", "Makefile", ".gitignore"):
+        src = REPO_ROOT / name
+        dest = tmp_path / name
+        if src.is_dir():
+            shutil.copytree(src, dest)
+        elif src.is_file():
+            shutil.copy2(src, dest)
+
+    # Write an .env.example that is missing MARKET_INTEL_HTTP_TIMEOUT_SECONDS.
+    (tmp_path / ".env.example").write_text(
+        "MARKET_INTEL_ENV=local\n"
+        "MARKET_INTEL_LOG_LEVEL=INFO\n"
+        "MARKET_INTEL_DATA_DIR=./.data\n"
+    )
+
+    result = subprocess.run(
+        ["bash", str(tmp_path / "scripts" / "verify_setup.sh")],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode != 0
+    assert "MARKET_INTEL_HTTP_TIMEOUT_SECONDS" in (result.stdout + result.stderr)
+
+
+def test_env_example_has_no_trailing_whitespace_in_keys():
+    parsed = _parse_env_file(ENV_EXAMPLE)
+    for key in parsed:
+        assert key == key.strip(), f"env key must not have leading/trailing whitespace: {key!r}"
+
+
+def test_env_example_values_are_non_empty_for_required_keys():
+    parsed = _parse_env_file(ENV_EXAMPLE)
+    for key in REQUIRED_ENV_KEYS:
+        assert parsed.get(key), f"required key {key} must have a default value in .env.example"
+
+
+def test_verify_script_uses_strict_bash_mode():
+    """The setup script must fail fast — set -euo pipefail is required."""
+    contents = VERIFY_SCRIPT.read_text()
+    assert "set -euo pipefail" in contents
