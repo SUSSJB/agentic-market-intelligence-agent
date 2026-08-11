@@ -241,3 +241,6 @@ contract of the market-intelligence agent (PRODMARKET-9).
 - TDD scaffolding tickets ship failing tests as
   `xfail(strict=True, raises=NotImplementedError)` so future PRs cannot silently
   leave stale xfail markers in place.
+
+## Market-Intensity Agent
+- **PRODMARKET-11** Step-010 [TDD][Market-Intensity Agent] Create failing tests and coverage — src/market_intel/market_intensity_agent.py, tests/test_market_intensity_agent.py
