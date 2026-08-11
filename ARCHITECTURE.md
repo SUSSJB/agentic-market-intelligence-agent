@@ -97,3 +97,54 @@ next-open forecast and unblocked the previously xfailed behaviour tests
   empty required values (`None` or empty string). Extra fields on a
   payload are permitted so downstream enrichers can attach debug metadata
   without breaking validation.
+
+## Acceptance Test Plan
+- **PRODMARKET-5** Step-004 [TDD][Acceptance Test Plan] Create failing tests and coverage — src/market_intel/acceptance_test_plan.py, tests/test_acceptance_test_plan.py
+
+Introduced the test-first scaffolding for the Acceptance Test Plan (ATP)
+of the market-intelligence agent (PRODMARKET-5).
+
+**Files:**
+- `src/market_intel/acceptance_test_plan.py` — contract stubs only:
+  `AcceptanceCase` and `AcceptanceTestPlan` frozen dataclasses,
+  `TestPlanError` (subclasses `ValueError`, carries `__test__ = False` so
+  pytest ignores it during collection), and `load_acceptance_test_plan()`
+  / `validate_test_result()` factories that raise `NotImplementedError`
+  until the implementation ticket lands.
+- `tests/test_acceptance_test_plan.py` — 39 tests. Six dataclass-shape,
+  hashability, immutability, error-type, and module-surface tests pass
+  today and lock the public contract. Thirty-three behaviour tests are
+  marked `pytest.mark.xfail(strict=True, raises=NotImplementedError,
+  reason="Pending Acceptance Test Plan implementation ticket")` so CI
+  stays deterministic (green) while the implementation is open; once the
+  implementation makes any of them pass, `strict=True` flips it to XPASS
+  and turns CI red until the marker is removed — forcing the follow-up
+  PR to actually delete the pending markers.
+
+**Behaviour intent locked by the pending tests:**
+- `load_acceptance_test_plan()` returns a deterministic
+  `AcceptanceTestPlan` with non-empty ordered cases, unique ids, GWT
+  (given/when/then) clauses filled in, categories drawn from
+  `{happy_path, edge_case, regression}`, coverage that includes at least
+  one `happy_path` and one `edge_case` case, and a
+  `required_result_fields` contract of at least
+  `{case_id, status, executed_at, evidence}`.
+- The ATP anchors to the MVP contract: every MVP requirement id shipped
+  under PRODMARKET-4 (`MVP-R1..MVP-R4`) is covered by at least one case
+  via its `covers` tuple.
+- `validate_test_result(payload)` accepts any dict carrying the required
+  fields, a `case_id` present in the plan, and a `status` from
+  `{passed, failed, skipped}`. It rejects non-dicts (naming the actual
+  type), missing fields (aggregating every offending field into the
+  error), empty required values (`None` or empty string), unknown
+  `case_id`s (naming the value), and disallowed statuses — all via
+  `TestPlanError`. Extra fields are permitted and the payload is not
+  mutated.
+
+**Conventions:**
+- ATP scaffolding follows the TDD convention introduced by PRODMARKET-3:
+  behaviour tests ship as `xfail(strict=True, raises=NotImplementedError)`
+  so future PRs cannot silently leave stale xfail markers in place.
+- Any exception class whose name starts with `Test` (e.g.
+  `TestPlanError`) must carry `__test__ = False` so pytest does not try
+  to collect it as a test class.
