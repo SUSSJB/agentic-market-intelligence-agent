@@ -245,3 +245,6 @@ contract of the market-intelligence agent (PRODMARKET-9).
 ## Market-Intensity Agent
 - **PRODMARKET-12** Step-011 [DEV][Market-Intensity Agent] Implement feature behavior to satisfy tests — src/market_intel/market_intensity_agent.py, tests/test_market_intensity_agent.py
 - **PRODMARKET-11** Step-010 [TDD][Market-Intensity Agent] Create failing tests and coverage — src/market_intel/market_intensity_agent.py, tests/test_market_intensity_agent.py
+
+## Implementation Roadmap
+- **PRODMARKET-14** Step-013 [DEV][Implementation Roadmap] Implement feature behavior to satisfy tests — ARCHITECTURE.md, src/market_intel/implementation_roadmap.py, tests/test_implementation_roadmap.py
