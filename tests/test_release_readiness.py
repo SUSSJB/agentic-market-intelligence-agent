@@ -493,3 +493,212 @@ class TestCrossModuleIntegration:
             "timestamp": "2026-08-11T10:00:00Z",
         }
         analyze_market_intensity(analysis)
+
+
+# ---------------------------------------------------------------------------
+# Additional edge-case and contract-verification tests (PRODMARKET-15 tester)
+# ---------------------------------------------------------------------------
+
+
+class TestValidateE2EFlowResultEdgeCases:
+    """Additional edge cases and per-flow acceptance criteria."""
+
+    def _payload_for_flow(self, flow_id: str) -> dict:
+        return {
+            "flow_id": flow_id,
+            "status": "passed",
+            "executed_at": "2026-08-11T12:00:00Z",
+            "evidence": f"Flow {flow_id} executed and verified",
+        }
+
+    @pytest.mark.parametrize("flow_id", ["E2E-F1", "E2E-F2", "E2E-F3", "E2E-F4", "E2E-F5", "E2E-F6"])
+    def test_each_canonical_flow_id_is_accepted(self, flow_id: str) -> None:
+        validate_e2e_flow_result(self._payload_for_flow(flow_id))
+
+    def test_multiple_missing_fields_all_named_in_error(self) -> None:
+        with pytest.raises(ReleaseReadinessError) as exc_info:
+            validate_e2e_flow_result({})
+        msg = str(exc_info.value)
+        for field in ("flow_id", "status", "executed_at", "evidence"):
+            assert field in msg
+
+    def test_none_flow_id_raises(self) -> None:
+        payload = {
+            "flow_id": None,
+            "status": "passed",
+            "executed_at": "2026-08-11T12:00:00Z",
+            "evidence": "ok",
+        }
+        with pytest.raises(ReleaseReadinessError):
+            validate_e2e_flow_result(payload)
+
+    def test_none_status_raises(self) -> None:
+        spec = load_release_readiness_spec()
+        payload = {
+            "flow_id": spec.flows[0].id,
+            "status": None,
+            "executed_at": "2026-08-11T12:00:00Z",
+            "evidence": "ok",
+        }
+        with pytest.raises(ReleaseReadinessError):
+            validate_e2e_flow_result(payload)
+
+    def test_list_payload_raises(self) -> None:
+        with pytest.raises(ReleaseReadinessError, match="dict"):
+            validate_e2e_flow_result([])  # type: ignore[arg-type]
+
+    def test_none_payload_raises(self) -> None:
+        with pytest.raises(ReleaseReadinessError, match="dict"):
+            validate_e2e_flow_result(None)  # type: ignore[arg-type]
+
+    def test_error_message_contains_unknown_id(self) -> None:
+        payload = {
+            "flow_id": "E2E-GHOST",
+            "status": "passed",
+            "executed_at": "2026-08-11T12:00:00Z",
+            "evidence": "ghost run",
+        }
+        with pytest.raises(ReleaseReadinessError, match="E2E-GHOST"):
+            validate_e2e_flow_result(payload)
+
+    @pytest.mark.parametrize("status", ["passed", "failed", "skipped"])
+    def test_all_valid_statuses_accepted(self, status: str) -> None:
+        spec = load_release_readiness_spec()
+        payload = {
+            "flow_id": spec.flows[0].id,
+            "status": status,
+            "executed_at": "2026-08-11T12:00:00Z",
+            "evidence": f"status={status}",
+        }
+        validate_e2e_flow_result(payload)
+
+
+class TestValidateDeploymentReadinessEdgeCases:
+    """Additional edge cases for validate_deployment_readiness."""
+
+    def test_list_payload_raises(self) -> None:
+        with pytest.raises(ReleaseReadinessError, match="dict"):
+            validate_deployment_readiness([])  # type: ignore[arg-type]
+
+    def test_none_payload_raises(self) -> None:
+        with pytest.raises(ReleaseReadinessError, match="dict"):
+            validate_deployment_readiness(None)  # type: ignore[arg-type]
+
+    def test_each_required_field_missing_raises(self) -> None:
+        spec = load_release_readiness_spec()
+        for field in spec.required_readiness_fields:
+            payload = {f: "ok" for f in spec.required_readiness_fields}
+            del payload[field]
+            with pytest.raises(ReleaseReadinessError, match=field):
+                validate_deployment_readiness(payload)
+
+    def test_each_required_field_none_raises(self) -> None:
+        spec = load_release_readiness_spec()
+        for field in spec.required_readiness_fields:
+            payload = {f: "ok" for f in spec.required_readiness_fields}
+            payload[field] = None
+            with pytest.raises(ReleaseReadinessError):
+                validate_deployment_readiness(payload)
+
+    def test_each_required_field_empty_raises(self) -> None:
+        spec = load_release_readiness_spec()
+        for field in spec.required_readiness_fields:
+            payload = {f: "ok" for f in spec.required_readiness_fields}
+            payload[field] = ""
+            with pytest.raises(ReleaseReadinessError):
+                validate_deployment_readiness(payload)
+
+    def test_numeric_value_for_passed_field_is_accepted(self) -> None:
+        spec = load_release_readiness_spec()
+        payload = {f: "ok" for f in spec.required_readiness_fields}
+        payload["passed"] = True
+        validate_deployment_readiness(payload)
+
+
+class TestSpecContractVerification:
+    """Verify specific contract counts and values from the canonical spec."""
+
+    def test_spec_has_six_canonical_flows(self) -> None:
+        spec = load_release_readiness_spec()
+        assert len(spec.flows) == 6
+
+    def test_spec_has_five_deployment_gates(self) -> None:
+        spec = load_release_readiness_spec()
+        assert len(spec.deployment_gates) == 5
+
+    def test_spec_has_five_rollback_steps(self) -> None:
+        spec = load_release_readiness_spec()
+        assert len(spec.rollback_steps) == 5
+
+    def test_spec_required_readiness_fields_contains_gate_id(self) -> None:
+        spec = load_release_readiness_spec()
+        assert "gate_id" in spec.required_readiness_fields
+
+    def test_spec_required_readiness_fields_contains_passed(self) -> None:
+        spec = load_release_readiness_spec()
+        assert "passed" in spec.required_readiness_fields
+
+    def test_spec_required_readiness_fields_contains_verified_by(self) -> None:
+        spec = load_release_readiness_spec()
+        assert "verified_by" in spec.required_readiness_fields
+
+    def test_spec_required_readiness_fields_contains_verified_at(self) -> None:
+        spec = load_release_readiness_spec()
+        assert "verified_at" in spec.required_readiness_fields
+
+    def test_spec_covers_all_four_gate_categories(self) -> None:
+        spec = load_release_readiness_spec()
+        categories = {g.category for g in spec.deployment_gates}
+        assert categories == {"quality", "security", "operability", "performance"}
+
+    def test_spec_covers_all_four_flow_types(self) -> None:
+        spec = load_release_readiness_spec()
+        flow_types = {f.flow_type for f in spec.flows}
+        assert flow_types == {"happy_path", "failure_path", "resiliency", "billing"}
+
+    def test_rollback_step_mentions_pagerduty(self) -> None:
+        spec = load_release_readiness_spec()
+        combined = " ".join(spec.rollback_steps).lower()
+        assert "pagerduty" in combined
+
+    def test_rollback_step_mentions_health_check(self) -> None:
+        spec = load_release_readiness_spec()
+        combined = " ".join(spec.rollback_steps).lower()
+        assert "health check" in combined
+
+    def test_spec_is_frozen(self) -> None:
+        spec = load_release_readiness_spec()
+        with pytest.raises((AttributeError, TypeError)):
+            spec.flows = ()  # type: ignore[misc]
+
+    def test_flow_ids_match_expected_pattern(self) -> None:
+        spec = load_release_readiness_spec()
+        for flow in spec.flows:
+            assert flow.id.startswith("E2E-F"), f"Unexpected flow id: {flow.id}"
+
+    def test_gate_ids_match_expected_pattern(self) -> None:
+        spec = load_release_readiness_spec()
+        for gate in spec.deployment_gates:
+            assert gate.id.startswith("DG-"), f"Unexpected gate id: {gate.id}"
+
+    def test_billing_flow_exercises_billing_service(self) -> None:
+        spec = load_release_readiness_spec()
+        billing_flows = [f for f in spec.flows if f.flow_type == "billing"]
+        assert billing_flows, "No billing flow defined"
+        for flow in billing_flows:
+            assert "billing" in flow.services
+
+    def test_resiliency_flow_is_present(self) -> None:
+        spec = load_release_readiness_spec()
+        resiliency_flows = [f for f in spec.flows if f.flow_type == "resiliency"]
+        assert len(resiliency_flows) >= 1
+
+    def test_quality_gate_is_present(self) -> None:
+        spec = load_release_readiness_spec()
+        quality_gates = [g for g in spec.deployment_gates if g.category == "quality"]
+        assert len(quality_gates) >= 1
+
+    def test_performance_gate_is_present(self) -> None:
+        spec = load_release_readiness_spec()
+        performance_gates = [g for g in spec.deployment_gates if g.category == "performance"]
+        assert len(performance_gates) >= 1
