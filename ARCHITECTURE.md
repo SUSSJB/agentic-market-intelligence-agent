@@ -4,6 +4,7 @@ This file is maintained automatically. Each section corresponds to an LLD compon
 Entries are appended after each ticket is completed.
 
 ## Platform Foundation
+- **PRODMARKET-2** Step-001 [INIT] Project bootstrap and environments — .env.example, .gitignore, ARCHITECTURE.md (+9 more)
 
 Established repository bootstrap, environment contracts, CI baseline, and developer
 onboarding for the market-intelligence agent (PRODMARKET-2).
