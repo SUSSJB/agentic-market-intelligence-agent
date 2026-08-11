@@ -23,7 +23,9 @@ onboarding for the market-intelligence agent (PRODMARKET-2).
 - `tests/test_setup_verification.py` — validates `.env.example` contract, verify script
   exit codes, and reproducibility of bootstrap.
 - `tests/test_config.py` — validates `Settings` loader behaviour and error paths.
-- `.github/workflows/ci.yml` — CI baseline: runs `make verify` and `make test` on push/PR.
+- `ci-proposed/ci.yml` — CI baseline: runs `make verify` and `make test` on push/PR.
+  Lives outside `.github/workflows/` for now; a maintainer with the `workflow` scope
+  should move it into `.github/workflows/ci.yml` to activate GitHub Actions.
 
 **Conventions:**
 - Python 3.11+, package layout under `src/market_intel/`.
