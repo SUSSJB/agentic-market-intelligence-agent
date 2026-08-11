@@ -181,6 +181,7 @@ and unblocked the previously xfailed behaviour tests (PRODMARKET-6).
   movement insights via ATP-C3 (happy_path, covers MVP-R3).
 
 ## Production Release Requirements
+- **PRODMARKET-8** Step-007 [DEV][Production Release Requirements] Implement feature behavior to satisfy tests — src/market_intel/production_release_requirements.py, tests/test_production_release_requirements.py
 - **PRODMARKET-7** Step-006 [TDD][Production Release Requirements] Create failing tests and coverage — ARCHITECTURE.md, src/market_intel/production_release_requirements.py, tests/test_production_release_requirements.py
 - **PRODMARKET-7** Step-006 [TDD][Production Release Requirements] Create failing tests and coverage — src/market_intel/production_release_requirements.py, tests/test_production_release_requirements.py
 
