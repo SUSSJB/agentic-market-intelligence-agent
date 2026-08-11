@@ -20,6 +20,14 @@ _ALLOWED_CATEGORIES: frozenset[str] = frozenset(
     {"quality", "performance", "security", "operability"}
 )
 
+_REQUIRED_READINESS_FIELDS: tuple[str, ...] = (
+    "release_id",
+    "test_coverage_pct",
+    "security_scan_passed",
+    "performance_benchmark_passed",
+    "approved_by",
+)
+
 
 class ReleaseRequirementsError(ValueError):
     """Raised when a release spec or readiness payload violates the contract."""
@@ -57,31 +65,87 @@ class ProductionReleaseSpec:
     requirements: tuple[ReleaseRequirement, ...]
 
 
+_CANONICAL_REQUIREMENTS: tuple[ReleaseRequirement, ...] = (
+    ReleaseRequirement(
+        id="PRR-R1",
+        title="Test Coverage Gate",
+        description=(
+            "All automated tests must pass and test coverage must meet or exceed the "
+            "minimum quality threshold before a release is approved."
+        ),
+        category="quality",
+    ),
+    ReleaseRequirement(
+        id="PRR-R2",
+        title="Performance Benchmark Gate",
+        description=(
+            "The service must satisfy latency and throughput benchmarks under peak-load "
+            "conditions as measured by the performance test suite."
+        ),
+        category="performance",
+    ),
+    ReleaseRequirement(
+        id="PRR-R3",
+        title="Security Scan Gate",
+        description=(
+            "A full security scan must complete with no critical vulnerabilities or exposed "
+            "secrets before the release is promoted to production."
+        ),
+        category="security",
+    ),
+    ReleaseRequirement(
+        id="PRR-R4",
+        title="Operability Readiness Gate",
+        description=(
+            "Monitoring, alerting, and rollback procedures must be verified and documented "
+            "to ensure the deployment is observable and recoverable in production."
+        ),
+        category="operability",
+    ),
+)
+
+
 def load_production_release_spec() -> ProductionReleaseSpec:
     """Return the canonical, immutable production release spec.
 
     Deterministic: repeated calls return equal :class:`ProductionReleaseSpec` instances.
-
-    Raises:
-        NotImplementedError: Until PRODMARKET-8 delivers the implementation.
     """
-    raise NotImplementedError(
-        "load_production_release_spec() is pending PRODMARKET-8 implementation"
+    return ProductionReleaseSpec(
+        required_readiness_fields=_REQUIRED_READINESS_FIELDS,
+        requirements=_CANONICAL_REQUIREMENTS,
     )
 
 
 def validate_release_readiness(payload: dict[str, Any]) -> None:
     """Validate that ``payload`` meets the production release readiness contract.
 
+    Empty values are defined as ``None`` or the empty string ``""``.
+    Whitespace-only strings, ``0``, and ``False`` are accepted.
+
     Raises:
         ReleaseRequirementsError: If ``payload`` is not a dict, is missing any
             required readiness field, or has empty values (``None`` or empty
             string) for required fields.
-        NotImplementedError: Until PRODMARKET-8 delivers the implementation.
     """
-    raise NotImplementedError(
-        "validate_release_readiness() is pending PRODMARKET-8 implementation"
-    )
+    if not isinstance(payload, dict):
+        raise ReleaseRequirementsError(
+            f"payload must be a dict, got {type(payload).__name__}"
+        )
+
+    spec = load_production_release_spec()
+    violations: list[str] = []
+
+    for field in spec.required_readiness_fields:
+        if field not in payload:
+            violations.append(field)
+        elif payload[field] is None or payload[field] == "":
+            violations.append(field)
+
+    if violations:
+        raise ReleaseRequirementsError(
+            f"release readiness payload missing or empty required fields: "
+            f"{', '.join(violations)}"
+        )
 
 
 __all__ = [

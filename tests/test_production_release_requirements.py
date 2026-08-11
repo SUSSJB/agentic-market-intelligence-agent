@@ -17,7 +17,7 @@ TDD history
 -----------
 PRODMARKET-7 introduced these tests marked ``xfail(strict=True, ...)`` so
 CI stays green while the implementation ticket (PRODMARKET-8) is open.
-PRODMARKET-8 will deliver the implementation and remove the ``xfail`` markers
+PRODMARKET-8 delivered the implementation and removed the ``xfail`` markers
 so the behaviour tests assert real behaviour on every run.
 
 External deps
@@ -85,23 +85,15 @@ def test_module_exports_expected_public_symbols():
 
 
 # ---------------------------------------------------------------------------
-# load_production_release_spec — behaviour tests (xfail until PRODMARKET-8)
+# load_production_release_spec — behaviour tests
 # ---------------------------------------------------------------------------
 
-_XFAIL = pytest.mark.xfail(
-    strict=True,
-    raises=NotImplementedError,
-    reason="Pending ProductionReleaseSpec implementation (PRODMARKET-8)",
-)
 
-
-@_XFAIL
 def test_load_production_release_spec_returns_spec_instance():
     spec = load_production_release_spec()
     assert isinstance(spec, ProductionReleaseSpec)
 
 
-@_XFAIL
 def test_load_production_release_spec_declares_required_readiness_fields():
     spec = load_production_release_spec()
     expected = {
@@ -117,7 +109,6 @@ def test_load_production_release_spec_declares_required_readiness_fields():
     )
 
 
-@_XFAIL
 def test_load_production_release_spec_has_non_empty_ordered_requirements():
     spec = load_production_release_spec()
     assert isinstance(spec.requirements, tuple)
@@ -125,7 +116,6 @@ def test_load_production_release_spec_has_non_empty_ordered_requirements():
     assert all(isinstance(r, ReleaseRequirement) for r in spec.requirements)
 
 
-@_XFAIL
 def test_load_production_release_spec_requirement_ids_are_unique_and_non_empty():
     spec = load_production_release_spec()
     ids = [r.id for r in spec.requirements]
@@ -133,7 +123,6 @@ def test_load_production_release_spec_requirement_ids_are_unique_and_non_empty()
     assert len(ids) == len(set(ids)), f"requirement ids must be unique, got {ids}"
 
 
-@_XFAIL
 def test_load_production_release_spec_categories_are_from_allowed_set():
     spec = load_production_release_spec()
     allowed = {"quality", "performance", "security", "operability"}
@@ -141,14 +130,12 @@ def test_load_production_release_spec_categories_are_from_allowed_set():
     assert not bad, f"requirements with disallowed category: {bad}"
 
 
-@_XFAIL
 def test_load_production_release_spec_covers_all_allowed_categories():
     spec = load_production_release_spec()
     categories = {r.category for r in spec.requirements}
     assert categories == {"quality", "performance", "security", "operability"}
 
 
-@_XFAIL
 def test_load_production_release_spec_requirement_titles_and_descriptions_non_empty():
     spec = load_production_release_spec()
     for r in spec.requirements:
@@ -156,12 +143,10 @@ def test_load_production_release_spec_requirement_titles_and_descriptions_non_em
         assert r.description.strip(), f"requirement {r.id} has empty description"
 
 
-@_XFAIL
 def test_load_production_release_spec_is_deterministic_across_calls():
     assert load_production_release_spec() == load_production_release_spec()
 
 
-@_XFAIL
 def test_load_production_release_spec_repeated_calls_have_equal_requirements():
     a = load_production_release_spec()
     b = load_production_release_spec()
@@ -169,28 +154,24 @@ def test_load_production_release_spec_repeated_calls_have_equal_requirements():
     assert a.required_readiness_fields == b.required_readiness_fields
 
 
-@_XFAIL
 def test_load_production_release_spec_field_containers_are_tuples():
     spec = load_production_release_spec()
     assert isinstance(spec.required_readiness_fields, tuple)
     assert isinstance(spec.requirements, tuple)
 
 
-@_XFAIL
 def test_production_release_spec_instance_is_immutable():
     spec = load_production_release_spec()
     with pytest.raises(dataclasses.FrozenInstanceError):
         spec.required_readiness_fields = ()  # type: ignore[misc]
 
 
-@_XFAIL
 def test_load_production_release_spec_contains_canonical_requirement_ids():
     spec = load_production_release_spec()
     ids = {r.id for r in spec.requirements}
     assert {"PRR-R1", "PRR-R2", "PRR-R3", "PRR-R4"}.issubset(ids)
 
 
-@_XFAIL
 def test_load_production_release_spec_has_quality_gate_requirement():
     spec = load_production_release_spec()
     quality_reqs = [r for r in spec.requirements if r.category == "quality"]
@@ -199,7 +180,6 @@ def test_load_production_release_spec_has_quality_gate_requirement():
     assert any(kw in text for kw in ("test", "coverage", "review", "quality"))
 
 
-@_XFAIL
 def test_load_production_release_spec_has_security_gate_requirement():
     spec = load_production_release_spec()
     security_reqs = [r for r in spec.requirements if r.category == "security"]
@@ -208,7 +188,6 @@ def test_load_production_release_spec_has_security_gate_requirement():
     assert any(kw in text for kw in ("security", "scan", "vulnerabilit", "secret"))
 
 
-@_XFAIL
 def test_load_production_release_spec_has_performance_gate_requirement():
     spec = load_production_release_spec()
     perf_reqs = [r for r in spec.requirements if r.category == "performance"]
@@ -217,7 +196,6 @@ def test_load_production_release_spec_has_performance_gate_requirement():
     assert any(kw in text for kw in ("latency", "throughput", "benchmark", "performance"))
 
 
-@_XFAIL
 def test_load_production_release_spec_has_operability_gate_requirement():
     spec = load_production_release_spec()
     ops_reqs = [r for r in spec.requirements if r.category == "operability"]
@@ -227,7 +205,7 @@ def test_load_production_release_spec_has_operability_gate_requirement():
 
 
 # ---------------------------------------------------------------------------
-# validate_release_readiness — behaviour tests (xfail until PRODMARKET-8)
+# validate_release_readiness — behaviour tests
 # ---------------------------------------------------------------------------
 
 
@@ -235,14 +213,12 @@ def _valid_readiness_payload(spec: ProductionReleaseSpec) -> dict[str, object]:
     return {name: f"value-{name}" for name in spec.required_readiness_fields}
 
 
-@_XFAIL
 def test_validate_release_readiness_accepts_payload_with_all_required_fields():
     spec = load_production_release_spec()
     payload = _valid_readiness_payload(spec)
     validate_release_readiness(payload)  # must not raise
 
 
-@_XFAIL
 def test_validate_release_readiness_accepts_payload_with_extra_fields():
     spec = load_production_release_spec()
     payload = _valid_readiness_payload(spec)
@@ -250,7 +226,6 @@ def test_validate_release_readiness_accepts_payload_with_extra_fields():
     validate_release_readiness(payload)
 
 
-@_XFAIL
 @pytest.mark.parametrize(
     "not_a_dict",
     [None, [], "release", 42, 3.14, ("release_id", "approved_by")],
@@ -261,14 +236,12 @@ def test_validate_release_readiness_rejects_non_dict_payloads(not_a_dict):
         validate_release_readiness(not_a_dict)  # type: ignore[arg-type]
 
 
-@_XFAIL
 def test_validate_release_readiness_non_dict_error_names_actual_type():
     with pytest.raises(ReleaseRequirementsError) as exc_info:
         validate_release_readiness("not a dict")  # type: ignore[arg-type]
     assert "str" in str(exc_info.value)
 
 
-@_XFAIL
 def test_validate_release_readiness_rejects_missing_required_field():
     spec = load_production_release_spec()
     assert spec.required_readiness_fields, "spec must have at least one required field"
@@ -281,7 +254,6 @@ def test_validate_release_readiness_rejects_missing_required_field():
     assert missing in str(exc_info.value)
 
 
-@_XFAIL
 def test_validate_release_readiness_rejects_empty_required_value():
     spec = load_production_release_spec()
     payload = _valid_readiness_payload(spec)
@@ -291,7 +263,6 @@ def test_validate_release_readiness_rejects_empty_required_value():
         validate_release_readiness(payload)
 
 
-@_XFAIL
 def test_validate_release_readiness_rejects_none_required_value():
     spec = load_production_release_spec()
     payload = _valid_readiness_payload(spec)
@@ -301,7 +272,6 @@ def test_validate_release_readiness_rejects_none_required_value():
         validate_release_readiness(payload)
 
 
-@_XFAIL
 def test_validate_release_readiness_rejects_all_fields_missing():
     with pytest.raises(ReleaseRequirementsError) as exc_info:
         validate_release_readiness({})
@@ -310,7 +280,6 @@ def test_validate_release_readiness_rejects_all_fields_missing():
         assert field in msg
 
 
-@_XFAIL
 def test_validate_release_readiness_reports_multiple_missing_fields():
     spec = load_production_release_spec()
     payload = _valid_readiness_payload(spec)
@@ -325,7 +294,6 @@ def test_validate_release_readiness_reports_multiple_missing_fields():
         assert f in msg
 
 
-@_XFAIL
 def test_validate_release_readiness_reports_multiple_empty_fields():
     spec = load_production_release_spec()
     payload = _valid_readiness_payload(spec)
@@ -339,7 +307,6 @@ def test_validate_release_readiness_reports_multiple_empty_fields():
     assert spec.required_readiness_fields[1] in msg
 
 
-@_XFAIL
 def test_validate_release_readiness_accepts_non_string_non_empty_values():
     spec = load_production_release_spec()
     payload = _valid_readiness_payload(spec)
@@ -348,7 +315,6 @@ def test_validate_release_readiness_accepts_non_string_non_empty_values():
     validate_release_readiness(payload)
 
 
-@_XFAIL
 def test_validate_release_readiness_accepts_whitespace_string_values():
     spec = load_production_release_spec()
     payload = _valid_readiness_payload(spec)
@@ -356,7 +322,6 @@ def test_validate_release_readiness_accepts_whitespace_string_values():
     validate_release_readiness(payload)
 
 
-@_XFAIL
 def test_validate_release_readiness_accepts_zero_and_false_values():
     spec = load_production_release_spec()
     payload = _valid_readiness_payload(spec)
@@ -365,14 +330,13 @@ def test_validate_release_readiness_accepts_zero_and_false_values():
     validate_release_readiness(payload)
 
 
-@_XFAIL
 def test_validate_release_readiness_does_not_mutate_payload():
     spec = load_production_release_spec()
     payload = _valid_readiness_payload(spec)
     snapshot = dict(payload)
     try:
         validate_release_readiness(payload)
-    except (ReleaseRequirementsError, NotImplementedError):
+    except ReleaseRequirementsError:
         pass
     assert payload == snapshot
 
@@ -403,23 +367,3 @@ def test_release_requirements_error_carries_message():
 def test_release_requirements_error_is_catchable_as_valueerror():
     with pytest.raises(ValueError):
         raise ReleaseRequirementsError("bad payload")
-
-
-def test_load_production_release_spec_raises_not_implemented_error():
-    with pytest.raises(NotImplementedError):
-        load_production_release_spec()
-
-
-def test_load_production_release_spec_not_implemented_message_references_prodmarket_8():
-    with pytest.raises(NotImplementedError, match="PRODMARKET-8"):
-        load_production_release_spec()
-
-
-def test_validate_release_readiness_raises_not_implemented_error():
-    with pytest.raises(NotImplementedError):
-        validate_release_readiness({})
-
-
-def test_validate_release_readiness_not_implemented_message_references_prodmarket_8():
-    with pytest.raises(NotImplementedError, match="PRODMARKET-8"):
-        validate_release_readiness({})
