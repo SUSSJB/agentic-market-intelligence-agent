@@ -243,4 +243,5 @@ contract of the market-intelligence agent (PRODMARKET-9).
   leave stale xfail markers in place.
 
 ## Market-Intensity Agent
+- **PRODMARKET-12** Step-011 [DEV][Market-Intensity Agent] Implement feature behavior to satisfy tests — src/market_intel/market_intensity_agent.py, tests/test_market_intensity_agent.py
 - **PRODMARKET-11** Step-010 [TDD][Market-Intensity Agent] Create failing tests and coverage — src/market_intel/market_intensity_agent.py, tests/test_market_intensity_agent.py
