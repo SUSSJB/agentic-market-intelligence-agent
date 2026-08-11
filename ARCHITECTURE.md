@@ -99,6 +99,7 @@ next-open forecast and unblocked the previously xfailed behaviour tests
   without breaking validation.
 
 ## Acceptance Test Plan
+- **PRODMARKET-6** Step-005 [DEV][Acceptance Test Plan] Implement feature behavior to satisfy tests — ARCHITECTURE.md, src/market_intel/acceptance_test_plan.py, tests/test_acceptance_test_plan.py
 - **PRODMARKET-5** Step-004 [TDD][Acceptance Test Plan] Create failing tests and coverage — src/market_intel/acceptance_test_plan.py, tests/test_acceptance_test_plan.py
 
 Introduced the test-first scaffolding for the Acceptance Test Plan (ATP)
