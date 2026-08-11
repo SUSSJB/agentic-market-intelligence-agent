@@ -248,3 +248,33 @@ contract of the market-intelligence agent (PRODMARKET-9).
 
 ## Implementation Roadmap
 - **PRODMARKET-14** Step-013 [DEV][Implementation Roadmap] Implement feature behavior to satisfy tests — ARCHITECTURE.md, src/market_intel/implementation_roadmap.py, tests/test_implementation_roadmap.py
+
+## Release Readiness
+- **PRODMARKET-15** Step-014 [E2E] End-to-end integration and release readiness — src/market_intel/release_readiness.py, tests/test_release_readiness.py
+
+Delivered the E2E integration and release readiness contract, wiring together all
+previously-shipped components into a validated end-to-end journey (PRODMARKET-15).
+
+**Files:**
+- `src/market_intel/release_readiness.py` — production implementation exposing:
+  `E2EFlow`, `E2EFlowResult`, `DeploymentGate`, `ReleaseReadinessSpec`,
+  `ReleaseReadinessError`, `load_release_readiness_spec()`,
+  `validate_e2e_flow_result()`, and `validate_deployment_readiness()`.
+- `tests/test_release_readiness.py` — 58 tests covering module surface, spec
+  behaviour, flow-result validation, deployment-readiness validation, and
+  cross-module integration smoke tests that wire together MVP, ATP, production
+  release, post-measure, market-intensity, and release-readiness contracts.
+
+**Behaviour highlights:**
+- `load_release_readiness_spec()` returns a deterministic `ReleaseReadinessSpec`
+  with 6 `E2EFlow` entries spanning `happy_path`, `failure_path`, `resiliency`,
+  and `billing` types, and 5 `DeploymentGate` entries covering quality, security,
+  operability (x2), and performance categories.
+- `validate_e2e_flow_result()` enforces required fields, rejects unknown flow ids
+  and disallowed statuses, and permits extra metadata fields.
+- `validate_deployment_readiness()` aggregates all missing/empty field names into
+  a single `ReleaseReadinessError`, covering the full release checklist.
+- Rollback strategy: 5-step ordered procedure (revert, restore image tag, notify
+  on-call, validate health checks, open post-mortem ticket).
+- Cross-module integration: all MVP requirements are covered by ATP cases; all
+  production release categories are covered by deployment gates.
