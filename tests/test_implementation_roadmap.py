@@ -133,13 +133,11 @@ def test_roadmap_error_is_catchable_as_valueerror():
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.xfail(strict=True, raises=NotImplementedError, reason="Pending PRODMARKET-14 implementation")
 def test_load_implementation_roadmap_returns_roadmap_instance():
     roadmap = load_implementation_roadmap()
     assert isinstance(roadmap, ImplementationRoadmap)
 
 
-@pytest.mark.xfail(strict=True, raises=NotImplementedError, reason="Pending PRODMARKET-14 implementation")
 def test_load_implementation_roadmap_has_non_empty_milestones():
     roadmap = load_implementation_roadmap()
     assert isinstance(roadmap.milestones, tuple)
@@ -147,7 +145,6 @@ def test_load_implementation_roadmap_has_non_empty_milestones():
     assert all(isinstance(m, RoadmapMilestone) for m in roadmap.milestones)
 
 
-@pytest.mark.xfail(strict=True, raises=NotImplementedError, reason="Pending PRODMARKET-14 implementation")
 def test_load_implementation_roadmap_milestone_ids_are_unique_and_non_empty():
     roadmap = load_implementation_roadmap()
     ids = [m.id for m in roadmap.milestones]
@@ -155,7 +152,6 @@ def test_load_implementation_roadmap_milestone_ids_are_unique_and_non_empty():
     assert len(ids) == len(set(ids)), f"milestone ids must be unique, got {ids}"
 
 
-@pytest.mark.xfail(strict=True, raises=NotImplementedError, reason="Pending PRODMARKET-14 implementation")
 def test_load_implementation_roadmap_phases_are_from_allowed_set():
     roadmap = load_implementation_roadmap()
     allowed = {"planning", "development", "testing", "deployment"}
@@ -163,14 +159,12 @@ def test_load_implementation_roadmap_phases_are_from_allowed_set():
     assert not bad, f"milestones with disallowed phase: {bad}"
 
 
-@pytest.mark.xfail(strict=True, raises=NotImplementedError, reason="Pending PRODMARKET-14 implementation")
 def test_load_implementation_roadmap_covers_all_phases():
     roadmap = load_implementation_roadmap()
     phases = {m.phase for m in roadmap.milestones}
     assert phases == {"planning", "development", "testing", "deployment"}
 
 
-@pytest.mark.xfail(strict=True, raises=NotImplementedError, reason="Pending PRODMARKET-14 implementation")
 def test_load_implementation_roadmap_priorities_are_from_allowed_set():
     roadmap = load_implementation_roadmap()
     allowed = {"high", "medium", "low"}
@@ -178,14 +172,12 @@ def test_load_implementation_roadmap_priorities_are_from_allowed_set():
     assert not bad, f"milestones with disallowed priority: {bad}"
 
 
-@pytest.mark.xfail(strict=True, raises=NotImplementedError, reason="Pending PRODMARKET-14 implementation")
 def test_load_implementation_roadmap_has_at_least_one_high_priority_milestone():
     roadmap = load_implementation_roadmap()
     high_priority = [m for m in roadmap.milestones if m.priority == "high"]
     assert high_priority, "roadmap must include at least one high priority milestone"
 
 
-@pytest.mark.xfail(strict=True, raises=NotImplementedError, reason="Pending PRODMARKET-14 implementation")
 def test_load_implementation_roadmap_milestone_titles_and_descriptions_non_empty():
     roadmap = load_implementation_roadmap()
     for m in roadmap.milestones:
@@ -193,12 +185,10 @@ def test_load_implementation_roadmap_milestone_titles_and_descriptions_non_empty
         assert m.description.strip(), f"milestone {m.id} has empty description"
 
 
-@pytest.mark.xfail(strict=True, raises=NotImplementedError, reason="Pending PRODMARKET-14 implementation")
 def test_load_implementation_roadmap_is_deterministic_across_calls():
     assert load_implementation_roadmap() == load_implementation_roadmap()
 
 
-@pytest.mark.xfail(strict=True, raises=NotImplementedError, reason="Pending PRODMARKET-14 implementation")
 def test_load_implementation_roadmap_repeated_calls_have_equal_milestones():
     a = load_implementation_roadmap()
     b = load_implementation_roadmap()
@@ -207,28 +197,24 @@ def test_load_implementation_roadmap_repeated_calls_have_equal_milestones():
     assert a.version == b.version
 
 
-@pytest.mark.xfail(strict=True, raises=NotImplementedError, reason="Pending PRODMARKET-14 implementation")
 def test_load_implementation_roadmap_field_containers_are_tuples():
     roadmap = load_implementation_roadmap()
     assert isinstance(roadmap.required_progress_fields, tuple)
     assert isinstance(roadmap.milestones, tuple)
 
 
-@pytest.mark.xfail(strict=True, raises=NotImplementedError, reason="Pending PRODMARKET-14 implementation")
 def test_load_implementation_roadmap_instance_is_immutable():
     roadmap = load_implementation_roadmap()
     with pytest.raises(dataclasses.FrozenInstanceError):
         roadmap.required_progress_fields = ()  # type: ignore[misc]
 
 
-@pytest.mark.xfail(strict=True, raises=NotImplementedError, reason="Pending PRODMARKET-14 implementation")
 def test_load_implementation_roadmap_has_version_string():
     roadmap = load_implementation_roadmap()
     assert isinstance(roadmap.version, str)
     assert roadmap.version.strip(), "version must be non-empty"
 
 
-@pytest.mark.xfail(strict=True, raises=NotImplementedError, reason="Pending PRODMARKET-14 implementation")
 def test_load_implementation_roadmap_declares_required_progress_fields():
     roadmap = load_implementation_roadmap()
     expected = {"milestone_id", "status", "completed_at", "owner", "evidence"}
@@ -238,14 +224,12 @@ def test_load_implementation_roadmap_declares_required_progress_fields():
     )
 
 
-@pytest.mark.xfail(strict=True, raises=NotImplementedError, reason="Pending PRODMARKET-14 implementation")
 def test_load_implementation_roadmap_contains_canonical_milestone_ids():
     roadmap = load_implementation_roadmap()
     ids = {m.id for m in roadmap.milestones}
     assert {"RM-M1", "RM-M2", "RM-M3", "RM-M4"}.issubset(ids)
 
 
-@pytest.mark.xfail(strict=True, raises=NotImplementedError, reason="Pending PRODMARKET-14 implementation")
 def test_load_implementation_roadmap_has_planning_milestone():
     roadmap = load_implementation_roadmap()
     planning = [m for m in roadmap.milestones if m.phase == "planning"]
@@ -254,7 +238,6 @@ def test_load_implementation_roadmap_has_planning_milestone():
     assert any(kw in text for kw in ("plan", "design", "architect", "require", "scope"))
 
 
-@pytest.mark.xfail(strict=True, raises=NotImplementedError, reason="Pending PRODMARKET-14 implementation")
 def test_load_implementation_roadmap_has_development_milestone():
     roadmap = load_implementation_roadmap()
     dev = [m for m in roadmap.milestones if m.phase == "development"]
@@ -263,7 +246,6 @@ def test_load_implementation_roadmap_has_development_milestone():
     assert any(kw in text for kw in ("develop", "implement", "build", "code", "feature"))
 
 
-@pytest.mark.xfail(strict=True, raises=NotImplementedError, reason="Pending PRODMARKET-14 implementation")
 def test_load_implementation_roadmap_has_testing_milestone():
     roadmap = load_implementation_roadmap()
     testing = [m for m in roadmap.milestones if m.phase == "testing"]
@@ -272,7 +254,6 @@ def test_load_implementation_roadmap_has_testing_milestone():
     assert any(kw in text for kw in ("test", "verif", "valid", "qa", "quality"))
 
 
-@pytest.mark.xfail(strict=True, raises=NotImplementedError, reason="Pending PRODMARKET-14 implementation")
 def test_load_implementation_roadmap_has_deployment_milestone():
     roadmap = load_implementation_roadmap()
     deployment = [m for m in roadmap.milestones if m.phase == "deployment"]
@@ -281,7 +262,6 @@ def test_load_implementation_roadmap_has_deployment_milestone():
     assert any(kw in text for kw in ("deploy", "release", "ship", "launch", "produc"))
 
 
-@pytest.mark.xfail(strict=True, raises=NotImplementedError, reason="Pending PRODMARKET-14 implementation")
 def test_load_implementation_roadmap_dependencies_are_tuples():
     roadmap = load_implementation_roadmap()
     for m in roadmap.milestones:
@@ -290,7 +270,6 @@ def test_load_implementation_roadmap_dependencies_are_tuples():
         )
 
 
-@pytest.mark.xfail(strict=True, raises=NotImplementedError, reason="Pending PRODMARKET-14 implementation")
 def test_load_implementation_roadmap_dependency_ids_reference_known_milestones():
     roadmap = load_implementation_roadmap()
     all_ids = {m.id for m in roadmap.milestones}
@@ -306,7 +285,6 @@ def test_load_implementation_roadmap_dependency_ids_reference_known_milestones()
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.xfail(strict=True, raises=NotImplementedError, reason="Pending PRODMARKET-14 implementation")
 def test_validate_roadmap_progress_accepts_payload_with_all_required_fields():
     roadmap = load_implementation_roadmap()
     milestone_id = roadmap.milestones[0].id
@@ -316,7 +294,6 @@ def test_validate_roadmap_progress_accepts_payload_with_all_required_fields():
     validate_roadmap_progress(payload)  # must not raise
 
 
-@pytest.mark.xfail(strict=True, raises=NotImplementedError, reason="Pending PRODMARKET-14 implementation")
 def test_validate_roadmap_progress_accepts_payload_with_extra_fields():
     roadmap = load_implementation_roadmap()
     milestone_id = roadmap.milestones[0].id
@@ -332,20 +309,17 @@ def test_validate_roadmap_progress_accepts_payload_with_extra_fields():
     [None, [], "progress", 42, 3.14, ("milestone_id", "status")],
     ids=["none", "list", "str", "int", "float", "tuple"],
 )
-@pytest.mark.xfail(strict=True, raises=NotImplementedError, reason="Pending PRODMARKET-14 implementation")
 def test_validate_roadmap_progress_rejects_non_dict_payloads(not_a_dict):
     with pytest.raises(RoadmapError):
         validate_roadmap_progress(not_a_dict)  # type: ignore[arg-type]
 
 
-@pytest.mark.xfail(strict=True, raises=NotImplementedError, reason="Pending PRODMARKET-14 implementation")
 def test_validate_roadmap_progress_non_dict_error_names_actual_type():
     with pytest.raises(RoadmapError) as exc_info:
         validate_roadmap_progress("not a dict")  # type: ignore[arg-type]
     assert "str" in str(exc_info.value)
 
 
-@pytest.mark.xfail(strict=True, raises=NotImplementedError, reason="Pending PRODMARKET-14 implementation")
 def test_validate_roadmap_progress_rejects_missing_required_field():
     roadmap = load_implementation_roadmap()
     milestone_id = roadmap.milestones[0].id
@@ -359,7 +333,6 @@ def test_validate_roadmap_progress_rejects_missing_required_field():
     assert missing in str(exc_info.value)
 
 
-@pytest.mark.xfail(strict=True, raises=NotImplementedError, reason="Pending PRODMARKET-14 implementation")
 def test_validate_roadmap_progress_rejects_empty_required_value():
     roadmap = load_implementation_roadmap()
     milestone_id = roadmap.milestones[0].id
@@ -371,7 +344,6 @@ def test_validate_roadmap_progress_rejects_empty_required_value():
         validate_roadmap_progress(payload)
 
 
-@pytest.mark.xfail(strict=True, raises=NotImplementedError, reason="Pending PRODMARKET-14 implementation")
 def test_validate_roadmap_progress_rejects_none_required_value():
     roadmap = load_implementation_roadmap()
     milestone_id = roadmap.milestones[0].id
@@ -383,7 +355,6 @@ def test_validate_roadmap_progress_rejects_none_required_value():
         validate_roadmap_progress(payload)
 
 
-@pytest.mark.xfail(strict=True, raises=NotImplementedError, reason="Pending PRODMARKET-14 implementation")
 def test_validate_roadmap_progress_rejects_all_fields_missing():
     with pytest.raises(RoadmapError) as exc_info:
         validate_roadmap_progress({})
@@ -393,7 +364,6 @@ def test_validate_roadmap_progress_rejects_all_fields_missing():
         assert field in msg
 
 
-@pytest.mark.xfail(strict=True, raises=NotImplementedError, reason="Pending PRODMARKET-14 implementation")
 def test_validate_roadmap_progress_rejects_unknown_milestone_id():
     roadmap = load_implementation_roadmap()
     payload = {name: f"value-{name}" for name in roadmap.required_progress_fields}
@@ -404,7 +374,6 @@ def test_validate_roadmap_progress_rejects_unknown_milestone_id():
     assert "RM-UNKNOWN-999" in str(exc_info.value)
 
 
-@pytest.mark.xfail(strict=True, raises=NotImplementedError, reason="Pending PRODMARKET-14 implementation")
 def test_validate_roadmap_progress_rejects_disallowed_status():
     roadmap = load_implementation_roadmap()
     milestone_id = roadmap.milestones[0].id
@@ -415,7 +384,6 @@ def test_validate_roadmap_progress_rejects_disallowed_status():
         validate_roadmap_progress(payload)
 
 
-@pytest.mark.xfail(strict=True, raises=NotImplementedError, reason="Pending PRODMARKET-14 implementation")
 def test_validate_roadmap_progress_reports_multiple_missing_fields():
     roadmap = load_implementation_roadmap()
     payload = {name: f"value-{name}" for name in roadmap.required_progress_fields}
@@ -429,7 +397,6 @@ def test_validate_roadmap_progress_reports_multiple_missing_fields():
         assert f in msg
 
 
-@pytest.mark.xfail(strict=True, raises=NotImplementedError, reason="Pending PRODMARKET-14 implementation")
 def test_validate_roadmap_progress_accepts_valid_statuses():
     roadmap = load_implementation_roadmap()
     milestone_id = roadmap.milestones[0].id
@@ -440,7 +407,6 @@ def test_validate_roadmap_progress_accepts_valid_statuses():
         validate_roadmap_progress(payload)  # must not raise
 
 
-@pytest.mark.xfail(strict=True, raises=NotImplementedError, reason="Pending PRODMARKET-14 implementation")
 def test_validate_roadmap_progress_accepts_whitespace_string_values():
     roadmap = load_implementation_roadmap()
     milestone_id = roadmap.milestones[0].id
@@ -451,7 +417,6 @@ def test_validate_roadmap_progress_accepts_whitespace_string_values():
     validate_roadmap_progress(payload)
 
 
-@pytest.mark.xfail(strict=True, raises=NotImplementedError, reason="Pending PRODMARKET-14 implementation")
 def test_validate_roadmap_progress_does_not_mutate_payload():
     roadmap = load_implementation_roadmap()
     milestone_id = roadmap.milestones[0].id

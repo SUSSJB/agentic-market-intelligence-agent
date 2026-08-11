@@ -78,17 +78,68 @@ class ImplementationRoadmap:
     version: str
 
 
+_MILESTONES: tuple[RoadmapMilestone, ...] = (
+    RoadmapMilestone(
+        id="RM-M1",
+        title="Requirements and Architecture Design",
+        description=(
+            "Plan and architect the market-intelligence agent scope, define the "
+            "requirements contract, and produce the high-level design document."
+        ),
+        phase="planning",
+        priority="high",
+        dependencies=(),
+    ),
+    RoadmapMilestone(
+        id="RM-M2",
+        title="Core Feature Development",
+        description=(
+            "Implement the core market-intelligence features including OHLCV "
+            "ingestion, forecast model, and all MVP requirements for financial "
+            "analysts to receive detailed market movement insights."
+        ),
+        phase="development",
+        priority="high",
+        dependencies=("RM-M1",),
+    ),
+    RoadmapMilestone(
+        id="RM-M3",
+        title="Quality Assurance and Test Verification",
+        description=(
+            "Execute the full acceptance test plan, validate all test cases, "
+            "and verify that quality requirements are satisfied across all "
+            "edge cases and regression scenarios."
+        ),
+        phase="testing",
+        priority="medium",
+        dependencies=("RM-M2",),
+    ),
+    RoadmapMilestone(
+        id="RM-M4",
+        title="Production Deployment and Release",
+        description=(
+            "Deploy the market-intelligence agent to production, ship the release "
+            "package, and launch monitoring for live market data feeds."
+        ),
+        phase="deployment",
+        priority="high",
+        dependencies=("RM-M3",),
+    ),
+)
+
+_ROADMAP: ImplementationRoadmap = ImplementationRoadmap(
+    required_progress_fields=_REQUIRED_PROGRESS_FIELDS,
+    milestones=_MILESTONES,
+    version="1.0.0",
+)
+
+
 def load_implementation_roadmap() -> ImplementationRoadmap:
     """Return the canonical, immutable implementation roadmap.
 
     Deterministic: repeated calls return equal :class:`ImplementationRoadmap` instances.
-
-    Raises:
-        NotImplementedError: Until the implementation ticket lands.
     """
-    raise NotImplementedError(
-        "load_implementation_roadmap() is not implemented yet — pending PRODMARKET-14"
-    )
+    return _ROADMAP
 
 
 def validate_roadmap_progress(payload: dict[str, Any]) -> None:
@@ -101,11 +152,44 @@ def validate_roadmap_progress(payload: dict[str, Any]) -> None:
         RoadmapError: If ``payload`` is not a dict, is missing any required
             progress field, has empty values for required fields, contains an
             unknown ``milestone_id``, or carries a disallowed ``status``.
-        NotImplementedError: Until the implementation ticket lands.
     """
-    raise NotImplementedError(
-        "validate_roadmap_progress() is not implemented yet — pending PRODMARKET-14"
-    )
+    if not isinstance(payload, dict):
+        raise RoadmapError(
+            f"progress payload must be a dict, got {type(payload).__name__}"
+        )
+
+    roadmap = load_implementation_roadmap()
+
+    missing = [f for f in roadmap.required_progress_fields if f not in payload]
+    if missing:
+        raise RoadmapError(
+            f"progress payload missing required field(s): {', '.join(missing)}"
+        )
+
+    empty = [
+        f
+        for f in roadmap.required_progress_fields
+        if payload[f] is None or (isinstance(payload[f], str) and payload[f] == "")
+    ]
+    if empty:
+        raise RoadmapError(
+            f"progress payload has empty value(s) for required field(s): "
+            f"{', '.join(empty)}"
+        )
+
+    known_ids = {m.id for m in roadmap.milestones}
+    milestone_id = payload.get("milestone_id")
+    if milestone_id not in known_ids:
+        raise RoadmapError(
+            f"progress payload references unknown milestone_id: {milestone_id!r}"
+        )
+
+    status = payload.get("status")
+    if status not in _ALLOWED_STATUSES:
+        raise RoadmapError(
+            f"progress payload status {status!r} is not allowed; "
+            f"must be one of {sorted(_ALLOWED_STATUSES)}"
+        )
 
 
 __all__ = [
