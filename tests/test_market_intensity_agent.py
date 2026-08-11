@@ -40,12 +40,6 @@ from market_intel.market_intensity_agent import (
     load_market_intensity_spec,
 )
 
-_PENDING = pytest.mark.xfail(
-    strict=True,
-    raises=NotImplementedError,
-    reason="Pending Market-Intensity Agent implementation ticket (PRODMARKET-12)",
-)
-
 # ---------------------------------------------------------------------------
 # Dataclass shape — locks the public contract (these pass today)
 # ---------------------------------------------------------------------------
@@ -96,13 +90,11 @@ def test_module_exports_expected_public_symbols():
 # ---------------------------------------------------------------------------
 
 
-@_PENDING
 def test_load_market_intensity_spec_returns_spec_instance():
     spec = load_market_intensity_spec()
     assert isinstance(spec, MarketIntensitySpec)
 
 
-@_PENDING
 def test_load_market_intensity_spec_declares_required_analysis_fields():
     spec = load_market_intensity_spec()
     expected = {
@@ -118,7 +110,6 @@ def test_load_market_intensity_spec_declares_required_analysis_fields():
     )
 
 
-@_PENDING
 def test_load_market_intensity_spec_has_non_empty_ordered_signals():
     spec = load_market_intensity_spec()
     assert isinstance(spec.signals, tuple)
@@ -126,7 +117,6 @@ def test_load_market_intensity_spec_has_non_empty_ordered_signals():
     assert all(isinstance(s, MarketSignal) for s in spec.signals)
 
 
-@_PENDING
 def test_load_market_intensity_spec_signal_ids_are_unique_and_non_empty():
     spec = load_market_intensity_spec()
     ids = [s.id for s in spec.signals]
@@ -134,7 +124,6 @@ def test_load_market_intensity_spec_signal_ids_are_unique_and_non_empty():
     assert len(ids) == len(set(ids)), f"signal ids must be unique, got {ids}"
 
 
-@_PENDING
 def test_load_market_intensity_spec_categories_are_from_allowed_set():
     spec = load_market_intensity_spec()
     allowed = {"volume", "volatility", "momentum", "sentiment"}
@@ -142,14 +131,12 @@ def test_load_market_intensity_spec_categories_are_from_allowed_set():
     assert not bad, f"signals with disallowed category: {bad}"
 
 
-@_PENDING
 def test_load_market_intensity_spec_covers_all_allowed_categories():
     spec = load_market_intensity_spec()
     categories = {s.category for s in spec.signals}
     assert categories == {"volume", "volatility", "momentum", "sentiment"}
 
 
-@_PENDING
 def test_load_market_intensity_spec_signal_titles_and_descriptions_non_empty():
     spec = load_market_intensity_spec()
     for s in spec.signals:
@@ -157,12 +144,10 @@ def test_load_market_intensity_spec_signal_titles_and_descriptions_non_empty():
         assert s.description.strip(), f"signal {s.id} has empty description"
 
 
-@_PENDING
 def test_load_market_intensity_spec_is_deterministic_across_calls():
     assert load_market_intensity_spec() == load_market_intensity_spec()
 
 
-@_PENDING
 def test_load_market_intensity_spec_repeated_calls_have_equal_signals():
     a = load_market_intensity_spec()
     b = load_market_intensity_spec()
@@ -170,28 +155,24 @@ def test_load_market_intensity_spec_repeated_calls_have_equal_signals():
     assert a.required_analysis_fields == b.required_analysis_fields
 
 
-@_PENDING
 def test_load_market_intensity_spec_field_containers_are_tuples():
     spec = load_market_intensity_spec()
     assert isinstance(spec.required_analysis_fields, tuple)
     assert isinstance(spec.signals, tuple)
 
 
-@_PENDING
 def test_market_intensity_spec_instance_is_immutable():
     spec = load_market_intensity_spec()
     with pytest.raises(dataclasses.FrozenInstanceError):
         spec.required_analysis_fields = ()  # type: ignore[misc]
 
 
-@_PENDING
 def test_load_market_intensity_spec_contains_canonical_signal_ids():
     spec = load_market_intensity_spec()
     ids = {s.id for s in spec.signals}
     assert {"MIA-R1", "MIA-R2", "MIA-R3", "MIA-R4"}.issubset(ids)
 
 
-@_PENDING
 def test_load_market_intensity_spec_has_volume_signal():
     spec = load_market_intensity_spec()
     volume_signals = [s for s in spec.signals if s.category == "volume"]
@@ -200,7 +181,6 @@ def test_load_market_intensity_spec_has_volume_signal():
     assert any(kw in text for kw in ("volume", "trading", "liquidity", "activity"))
 
 
-@_PENDING
 def test_load_market_intensity_spec_has_volatility_signal():
     spec = load_market_intensity_spec()
     volatility_signals = [s for s in spec.signals if s.category == "volatility"]
@@ -211,7 +191,6 @@ def test_load_market_intensity_spec_has_volatility_signal():
     assert any(kw in text for kw in ("volatil", "price", "swing", "fluctuat", "range"))
 
 
-@_PENDING
 def test_load_market_intensity_spec_has_momentum_signal():
     spec = load_market_intensity_spec()
     momentum_signals = [s for s in spec.signals if s.category == "momentum"]
@@ -222,7 +201,6 @@ def test_load_market_intensity_spec_has_momentum_signal():
     assert any(kw in text for kw in ("momentum", "trend", "direction", "speed", "rate"))
 
 
-@_PENDING
 def test_load_market_intensity_spec_has_sentiment_signal():
     spec = load_market_intensity_spec()
     sentiment_signals = [s for s in spec.signals if s.category == "sentiment"]
@@ -238,7 +216,6 @@ def test_load_market_intensity_spec_has_sentiment_signal():
 # ---------------------------------------------------------------------------
 
 
-@_PENDING
 def test_analyze_market_intensity_accepts_payload_with_all_required_fields():
     spec = load_market_intensity_spec()
     payload = {name: f"value-{name}" for name in spec.required_analysis_fields}
@@ -246,7 +223,6 @@ def test_analyze_market_intensity_accepts_payload_with_all_required_fields():
     analyze_market_intensity(payload)  # must not raise
 
 
-@_PENDING
 def test_analyze_market_intensity_accepts_payload_with_extra_fields():
     spec = load_market_intensity_spec()
     payload = {name: f"value-{name}" for name in spec.required_analysis_fields}
@@ -255,7 +231,6 @@ def test_analyze_market_intensity_accepts_payload_with_extra_fields():
     analyze_market_intensity(payload)
 
 
-@_PENDING
 @pytest.mark.parametrize(
     "not_a_dict",
     [None, [], "result", 42, 3.14, ("signal_id", "symbol")],
@@ -266,14 +241,12 @@ def test_analyze_market_intensity_rejects_non_dict_payloads(not_a_dict):
         analyze_market_intensity(not_a_dict)  # type: ignore[arg-type]
 
 
-@_PENDING
 def test_analyze_market_intensity_non_dict_error_names_actual_type():
     with pytest.raises(MarketIntensityError) as exc_info:
         analyze_market_intensity("not a dict")  # type: ignore[arg-type]
     assert "str" in str(exc_info.value)
 
 
-@_PENDING
 def test_analyze_market_intensity_rejects_missing_required_field():
     spec = load_market_intensity_spec()
     assert spec.required_analysis_fields, "spec must have at least one required field"
@@ -287,7 +260,6 @@ def test_analyze_market_intensity_rejects_missing_required_field():
     assert missing in str(exc_info.value)
 
 
-@_PENDING
 def test_analyze_market_intensity_rejects_empty_required_value():
     spec = load_market_intensity_spec()
     payload = {name: f"value-{name}" for name in spec.required_analysis_fields}
@@ -298,7 +270,6 @@ def test_analyze_market_intensity_rejects_empty_required_value():
         analyze_market_intensity(payload)
 
 
-@_PENDING
 def test_analyze_market_intensity_rejects_none_required_value():
     spec = load_market_intensity_spec()
     payload = {name: f"value-{name}" for name in spec.required_analysis_fields}
@@ -309,7 +280,6 @@ def test_analyze_market_intensity_rejects_none_required_value():
         analyze_market_intensity(payload)
 
 
-@_PENDING
 def test_analyze_market_intensity_rejects_all_fields_missing():
     with pytest.raises(MarketIntensityError) as exc_info:
         analyze_market_intensity({})
@@ -319,7 +289,6 @@ def test_analyze_market_intensity_rejects_all_fields_missing():
         assert field in msg
 
 
-@_PENDING
 def test_analyze_market_intensity_reports_multiple_missing_fields():
     spec = load_market_intensity_spec()
     payload = {name: f"value-{name}" for name in spec.required_analysis_fields}
@@ -335,7 +304,6 @@ def test_analyze_market_intensity_reports_multiple_missing_fields():
         assert f in msg
 
 
-@_PENDING
 def test_analyze_market_intensity_reports_multiple_empty_fields():
     spec = load_market_intensity_spec()
     payload = {name: f"value-{name}" for name in spec.required_analysis_fields}
@@ -350,7 +318,6 @@ def test_analyze_market_intensity_reports_multiple_empty_fields():
     assert spec.required_analysis_fields[1] in msg
 
 
-@_PENDING
 def test_analyze_market_intensity_accepts_numeric_intensity_score():
     spec = load_market_intensity_spec()
     payload = {name: f"value-{name}" for name in spec.required_analysis_fields}
@@ -358,7 +325,6 @@ def test_analyze_market_intensity_accepts_numeric_intensity_score():
     analyze_market_intensity(payload)
 
 
-@_PENDING
 def test_analyze_market_intensity_accepts_zero_intensity_score():
     spec = load_market_intensity_spec()
     payload = {name: f"value-{name}" for name in spec.required_analysis_fields}
@@ -366,7 +332,6 @@ def test_analyze_market_intensity_accepts_zero_intensity_score():
     analyze_market_intensity(payload)
 
 
-@_PENDING
 def test_analyze_market_intensity_accepts_whitespace_string_values():
     spec = load_market_intensity_spec()
     payload = {name: f"value-{name}" for name in spec.required_analysis_fields}
@@ -375,7 +340,6 @@ def test_analyze_market_intensity_accepts_whitespace_string_values():
     analyze_market_intensity(payload)
 
 
-@_PENDING
 def test_analyze_market_intensity_does_not_mutate_payload():
     spec = load_market_intensity_spec()
     payload = {name: f"value-{name}" for name in spec.required_analysis_fields}
