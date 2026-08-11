@@ -210,3 +210,32 @@ contract of the market-intelligence agent (PRODMARKET-7).
 - TDD scaffolding tickets ship failing tests as
   `xfail(strict=True, raises=NotImplementedError)` so future PRs cannot silently
   leave stale xfail markers in place.
+
+## Post-Measure Requirements
+- **PRODMARKET-9** Step-008 [TDD][Post-Measure Requirements] Create failing tests and coverage — src/market_intel/post_measure_requirements.py, tests/test_post_measure_requirements.py
+
+Introduced the test-first scaffolding for the Post-Measure Requirements
+contract of the market-intelligence agent (PRODMARKET-9).
+
+**Files:**
+- `src/market_intel/post_measure_requirements.py` — contract stubs only:
+  `MeasureRequirement` and `PostMeasureSpec` frozen dataclasses,
+  `PostMeasureError` (subclasses `ValueError`), and `load_post_measure_spec()`
+  / `validate_measure_result()` factories that raise `NotImplementedError`
+  until the implementation ticket lands.
+- `tests/test_post_measure_requirements.py` — 45 tests. Ten dataclass-shape,
+  hashability, immutability, error-type, and module-surface tests pass today
+  and lock the public contract. Thirty-five behaviour tests are marked
+  `pytest.mark.xfail(strict=True, raises=NotImplementedError, reason="Pending PRODMARKET-10 …")`
+  so CI stays deterministic (green) while the implementation is open; once the
+  implementation makes any of them pass, `strict=True` flips it to XPASS and
+  turns CI red until the marker is removed — forcing the follow-up PR to
+  actually delete the pending markers.
+
+**Conventions:**
+- New agent-domain modules live under `src/market_intel/<component>.py` with
+  a matching `tests/test_<component>.py`, mirroring the layout established by
+  prior components.
+- TDD scaffolding tickets ship failing tests as
+  `xfail(strict=True, raises=NotImplementedError)` so future PRs cannot silently
+  leave stale xfail markers in place.
