@@ -372,3 +372,80 @@ def test_post_measure_error_carries_message():
 def test_post_measure_error_is_catchable_as_valueerror():
     with pytest.raises(ValueError):
         raise PostMeasureError("bad payload")
+
+
+# ---------------------------------------------------------------------------
+# Additional edge-case tests (PRODMARKET-10)
+# ---------------------------------------------------------------------------
+
+
+def test_validate_measure_result_accepts_false_as_field_value():
+    """False is explicitly listed as accepted in the module docstring."""
+    spec = load_post_measure_spec()
+    payload = {name: f"value-{name}" for name in spec.required_result_fields}
+    payload["confidence_score"] = False
+    validate_measure_result(payload)  # must not raise
+
+
+def test_validate_measure_result_error_message_mentions_missing_or_empty():
+    spec = load_post_measure_spec()
+    with pytest.raises(PostMeasureError) as exc_info:
+        validate_measure_result({})
+    msg = str(exc_info.value).lower()
+    assert "missing" in msg or "empty" in msg
+
+
+def test_post_measure_spec_is_hashable():
+    spec = load_post_measure_spec()
+    assert hash(spec) == hash(spec)
+    assert {spec} == {spec}
+
+
+def test_validate_measure_result_rejects_each_individual_required_field_missing():
+    """Each required field, when individually absent, raises PostMeasureError naming it."""
+    spec = load_post_measure_spec()
+    for field in spec.required_result_fields:
+        payload = {name: f"value-{name}" for name in spec.required_result_fields}
+        del payload[field]
+        with pytest.raises(PostMeasureError) as exc_info:
+            validate_measure_result(payload)
+        assert field in str(exc_info.value), f"error message must name missing field '{field}'"
+
+
+def test_validate_measure_result_rejects_each_individual_required_field_empty_string():
+    """Each required field set individually to '' raises PostMeasureError naming it."""
+    spec = load_post_measure_spec()
+    for field in spec.required_result_fields:
+        payload = {name: f"value-{name}" for name in spec.required_result_fields}
+        payload[field] = ""
+        with pytest.raises(PostMeasureError) as exc_info:
+            validate_measure_result(payload)
+        assert field in str(exc_info.value), f"error message must name empty field '{field}'"
+
+
+def test_validate_measure_result_rejects_each_individual_required_field_none():
+    """Each required field set individually to None raises PostMeasureError naming it."""
+    spec = load_post_measure_spec()
+    for field in spec.required_result_fields:
+        payload = {name: f"value-{name}" for name in spec.required_result_fields}
+        payload[field] = None
+        with pytest.raises(PostMeasureError) as exc_info:
+            validate_measure_result(payload)
+        assert field in str(exc_info.value), f"error message must name None field '{field}'"
+
+
+def test_load_post_measure_spec_required_fields_are_non_empty_strings():
+    spec = load_post_measure_spec()
+    for field in spec.required_result_fields:
+        assert isinstance(field, str) and field.strip(), (
+            f"required field name must be non-empty string, got {field!r}"
+        )
+
+
+def test_measure_requirement_all_fields_are_non_empty_strings_on_canonical_spec():
+    spec = load_post_measure_spec()
+    for req in spec.requirements:
+        assert isinstance(req.id, str) and req.id.strip()
+        assert isinstance(req.title, str) and req.title.strip()
+        assert isinstance(req.description, str) and req.description.strip()
+        assert isinstance(req.category, str) and req.category.strip()
