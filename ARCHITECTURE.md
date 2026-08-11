@@ -178,3 +178,32 @@ and unblocked the previously xfailed behaviour tests (PRODMARKET-6).
   payload is not mutated.
 - Acceptance intent satisfied: financial analysts receive detailed market
   movement insights via ATP-C3 (happy_path, covers MVP-R3).
+
+## Production Release Requirements
+- **PRODMARKET-7** Step-006 [TDD][Production Release Requirements] Create failing tests and coverage — src/market_intel/production_release_requirements.py, tests/test_production_release_requirements.py
+
+Introduced the test-first scaffolding for the Production Release Requirements (PRR)
+contract of the market-intelligence agent (PRODMARKET-7).
+
+**Files:**
+- `src/market_intel/production_release_requirements.py` — contract stubs only:
+  `ReleaseRequirement` and `ProductionReleaseSpec` frozen dataclasses,
+  `ReleaseRequirementsError` (subclasses `ValueError`), and
+  `load_production_release_spec()` / `validate_release_readiness()` factories
+  that raise `NotImplementedError` until the implementation ticket lands.
+- `tests/test_production_release_requirements.py` — 41 tests. Six dataclass-shape,
+  hashability, immutability, error-type, and module-surface tests pass today and
+  lock the public contract. Thirty-five behaviour tests are marked
+  `pytest.mark.xfail(strict=True, raises=NotImplementedError, reason="Pending PRODMARKET-8 …")`
+  so CI stays deterministic (green) while the implementation is open; once the
+  implementation makes any of them pass, `strict=True` flips it to XPASS and
+  turns CI red until the marker is removed — forcing the follow-up PR to actually
+  delete the pending markers.
+
+**Conventions:**
+- New agent-domain modules live under `src/market_intel/<component>.py` with
+  a matching `tests/test_<component>.py`, mirroring the layout established by
+  prior components.
+- TDD scaffolding tickets ship failing tests as
+  `xfail(strict=True, raises=NotImplementedError)` so future PRs cannot silently
+  leave stale xfail markers in place.
