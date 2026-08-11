@@ -1,15 +1,15 @@
 """Market-Intensity Agent: canonical market-intensity analysis contract.
 
 Defines the shape of the Market-Intensity Agent contract for the
-market-intelligence agent — covering volume, volatility, momentum, and
+market-intelligence agent -- covering volume, volatility, momentum, and
 sentiment intensity signals derived from market data.
 
 Public surface:
-    * :class:`MarketSignal` — a single market-intensity signal (frozen dataclass).
-    * :class:`MarketIntensitySpec` — the canonical, immutable market-intensity spec (frozen dataclass).
-    * :class:`MarketIntensityError` — raised when an intensity analysis payload violates the contract.
-    * :func:`load_market_intensity_spec` — returns the deterministic market-intensity spec.
-    * :func:`analyze_market_intensity` — validates a candidate intensity analysis payload.
+    * :class:`MarketSignal` -- a single market-intensity signal (frozen dataclass).
+    * :class:`MarketIntensitySpec` -- the canonical, immutable market-intensity spec (frozen dataclass).
+    * :class:`MarketIntensityError` -- raised when an intensity analysis payload violates the contract.
+    * :func:`load_market_intensity_spec` -- returns the deterministic market-intensity spec.
+    * :func:`analyze_market_intensity` -- validates a candidate intensity analysis payload.
 """
 from __future__ import annotations
 
@@ -65,17 +65,57 @@ class MarketIntensitySpec:
     signals: tuple[MarketSignal, ...]
 
 
+_SIGNALS: tuple[MarketSignal, ...] = (
+    MarketSignal(
+        id="MIA-R1",
+        title="Trading Volume Surge",
+        description=(
+            "Measures abnormal trading volume activity relative to the historical average,"
+            " indicating heightened market participation or liquidity events."
+        ),
+        category="volume",
+    ),
+    MarketSignal(
+        id="MIA-R2",
+        title="Price Volatility Range",
+        description=(
+            "Tracks intraday price swing and fluctuation width to quantify short-term volatility"
+            " and detect potential breakout or breakdown conditions."
+        ),
+        category="volatility",
+    ),
+    MarketSignal(
+        id="MIA-R3",
+        title="Trend Momentum Rate",
+        description=(
+            "Evaluates the speed and direction of price trend progression using rate-of-change"
+            " indicators to identify strengthening or weakening momentum."
+        ),
+        category="momentum",
+    ),
+    MarketSignal(
+        id="MIA-R4",
+        title="Market Sentiment Mood",
+        description=(
+            "Aggregates bullish and bearish signals from options flow, news tone, and social"
+            " sentiment to gauge overall market mood and investor fear/greed balance."
+        ),
+        category="sentiment",
+    ),
+)
+
+_SPEC = MarketIntensitySpec(
+    required_analysis_fields=_REQUIRED_ANALYSIS_FIELDS,
+    signals=_SIGNALS,
+)
+
+
 def load_market_intensity_spec() -> MarketIntensitySpec:
     """Return the canonical, immutable market-intensity spec.
 
     Deterministic: repeated calls return equal :class:`MarketIntensitySpec` instances.
-
-    Raises:
-        NotImplementedError: Until the implementation ticket lands.
     """
-    raise NotImplementedError(
-        "load_market_intensity_spec is not yet implemented — pending PRODMARKET-12"
-    )
+    return _SPEC
 
 
 def analyze_market_intensity(payload: dict[str, Any]) -> None:
@@ -86,13 +126,30 @@ def analyze_market_intensity(payload: dict[str, Any]) -> None:
 
     Raises:
         MarketIntensityError: If ``payload`` is not a dict, is missing any
-            required analysis field, has empty values (``None`` or empty
-            string) for required fields, or carries an unknown ``intensity_level``.
-        NotImplementedError: Until the implementation ticket lands.
+            required analysis field, or has empty values (``None`` or empty
+            string) for required fields.
     """
-    raise NotImplementedError(
-        "analyze_market_intensity is not yet implemented — pending PRODMARKET-12"
-    )
+    if not isinstance(payload, dict):
+        raise MarketIntensityError(
+            f"payload must be a dict, got {type(payload).__name__}"
+        )
+
+    errors: list[str] = []
+
+    missing = [f for f in _REQUIRED_ANALYSIS_FIELDS if f not in payload]
+    if missing:
+        errors.append(f"missing required fields: {', '.join(missing)}")
+
+    empty = [
+        f
+        for f in _REQUIRED_ANALYSIS_FIELDS
+        if f in payload and (payload[f] is None or payload[f] == "")
+    ]
+    if empty:
+        errors.append(f"empty required fields: {', '.join(empty)}")
+
+    if errors:
+        raise MarketIntensityError("; ".join(errors))
 
 
 __all__ = [
