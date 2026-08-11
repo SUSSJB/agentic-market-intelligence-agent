@@ -250,6 +250,7 @@ contract of the market-intelligence agent (PRODMARKET-9).
 - **PRODMARKET-14** Step-013 [DEV][Implementation Roadmap] Implement feature behavior to satisfy tests — ARCHITECTURE.md, src/market_intel/implementation_roadmap.py, tests/test_implementation_roadmap.py
 
 ## Release Readiness
+- **PRODMARKET-15** Step-014 [E2E] End-to-end integration and release readiness — ARCHITECTURE.md, src/market_intel/release_readiness.py, tests/test_release_readiness.py
 - **PRODMARKET-15** Step-014 [E2E] End-to-end integration and release readiness — src/market_intel/release_readiness.py, tests/test_release_readiness.py
 
 Delivered the E2E integration and release readiness contract, wiring together all
