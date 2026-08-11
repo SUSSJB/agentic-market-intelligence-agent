@@ -50,11 +50,6 @@ from market_intel.acceptance_test_plan import (
     validate_test_result,
 )
 
-_XFAIL_REASON = "Pending Acceptance Test Plan implementation ticket"
-_pending = pytest.mark.xfail(
-    strict=True, raises=NotImplementedError, reason=_XFAIL_REASON
-)
-
 
 # ---------------------------------------------------------------------------
 # Dataclass shape -- locks the public contract, passes today
@@ -133,13 +128,11 @@ def test_module_exports_expected_public_symbols():
 # ---------------------------------------------------------------------------
 
 
-@_pending
 def test_load_acceptance_test_plan_returns_plan_instance():
     plan = load_acceptance_test_plan()
     assert isinstance(plan, AcceptanceTestPlan)
 
 
-@_pending
 def test_load_acceptance_test_plan_has_non_empty_ordered_cases():
     plan = load_acceptance_test_plan()
     assert isinstance(plan.cases, tuple)
@@ -147,7 +140,6 @@ def test_load_acceptance_test_plan_has_non_empty_ordered_cases():
     assert all(isinstance(c, AcceptanceCase) for c in plan.cases)
 
 
-@_pending
 def test_load_acceptance_test_plan_case_ids_are_unique_and_non_empty():
     plan = load_acceptance_test_plan()
     ids = [c.id for c in plan.cases]
@@ -155,7 +147,6 @@ def test_load_acceptance_test_plan_case_ids_are_unique_and_non_empty():
     assert len(ids) == len(set(ids)), f"case ids must be unique, got {ids}"
 
 
-@_pending
 def test_load_acceptance_test_plan_case_categories_are_from_allowed_set():
     plan = load_acceptance_test_plan()
     allowed = {"happy_path", "edge_case", "regression"}
@@ -163,7 +154,6 @@ def test_load_acceptance_test_plan_case_categories_are_from_allowed_set():
     assert not bad, f"cases with disallowed category: {bad}"
 
 
-@_pending
 def test_load_acceptance_test_plan_covers_happy_path_and_edge_case_categories():
     # The acceptance criteria explicitly require critical happy-path AND
     # edge-case coverage -- pin both are present in the canonical plan.
@@ -173,7 +163,6 @@ def test_load_acceptance_test_plan_covers_happy_path_and_edge_case_categories():
     assert "edge_case" in categories
 
 
-@_pending
 def test_load_acceptance_test_plan_case_gwt_fields_are_non_empty():
     plan = load_acceptance_test_plan()
     for c in plan.cases:
@@ -183,7 +172,6 @@ def test_load_acceptance_test_plan_case_gwt_fields_are_non_empty():
         assert c.then.strip(), f"case {c.id} has empty then clause"
 
 
-@_pending
 def test_load_acceptance_test_plan_cases_cover_mvp_requirements():
     plan = load_acceptance_test_plan()
     for c in plan.cases:
@@ -195,7 +183,6 @@ def test_load_acceptance_test_plan_cases_cover_mvp_requirements():
             )
 
 
-@_pending
 def test_load_acceptance_test_plan_covers_every_mvp_requirement():
     # The ATP must anchor to the MVP contract shipped under PRODMARKET-4:
     # every canonical MVP requirement id needs at least one case exercising it.
@@ -208,7 +195,6 @@ def test_load_acceptance_test_plan_covers_every_mvp_requirement():
     assert not missing, f"MVP requirements not covered by any case: {sorted(missing)}"
 
 
-@_pending
 def test_load_acceptance_test_plan_required_result_fields_contract():
     plan = load_acceptance_test_plan()
     expected = {"case_id", "status", "executed_at", "evidence"}
@@ -218,19 +204,16 @@ def test_load_acceptance_test_plan_required_result_fields_contract():
     )
 
 
-@_pending
 def test_load_acceptance_test_plan_field_containers_are_tuples():
     plan = load_acceptance_test_plan()
     assert isinstance(plan.cases, tuple)
     assert isinstance(plan.required_result_fields, tuple)
 
 
-@_pending
 def test_load_acceptance_test_plan_is_deterministic_across_calls():
     assert load_acceptance_test_plan() == load_acceptance_test_plan()
 
 
-@_pending
 def test_load_acceptance_test_plan_repeated_calls_have_equal_cases():
     a = load_acceptance_test_plan()
     b = load_acceptance_test_plan()
@@ -238,7 +221,6 @@ def test_load_acceptance_test_plan_repeated_calls_have_equal_cases():
     assert a.required_result_fields == b.required_result_fields
 
 
-@_pending
 def test_load_acceptance_test_plan_instance_is_immutable():
     plan = load_acceptance_test_plan()
     with pytest.raises(dataclasses.FrozenInstanceError):
@@ -259,13 +241,11 @@ def _valid_result(plan: AcceptanceTestPlan) -> dict[str, object]:
     }
 
 
-@_pending
 def test_validate_test_result_accepts_payload_with_all_required_fields():
     plan = load_acceptance_test_plan()
     validate_test_result(_valid_result(plan))  # must not raise
 
 
-@_pending
 def test_validate_test_result_accepts_payload_with_extra_fields():
     plan = load_acceptance_test_plan()
     payload = _valid_result(plan)
@@ -273,7 +253,6 @@ def test_validate_test_result_accepts_payload_with_extra_fields():
     validate_test_result(payload)
 
 
-@_pending
 @pytest.mark.parametrize(
     "status",
     ["passed", "failed", "skipped"],
@@ -286,7 +265,6 @@ def test_validate_test_result_accepts_every_allowed_status(status):
     validate_test_result(payload)
 
 
-@_pending
 def test_validate_test_result_does_not_mutate_payload():
     plan = load_acceptance_test_plan()
     payload = _valid_result(plan)
@@ -300,7 +278,6 @@ def test_validate_test_result_does_not_mutate_payload():
 # ---------------------------------------------------------------------------
 
 
-@_pending
 @pytest.mark.parametrize(
     "not_a_dict",
     [None, [], "result", 42, 3.14, ("case_id", "status")],
@@ -311,7 +288,6 @@ def test_validate_test_result_rejects_non_dict_payloads(not_a_dict):
         validate_test_result(not_a_dict)  # type: ignore[arg-type]
 
 
-@_pending
 def test_validate_test_result_rejects_missing_required_field():
     plan = load_acceptance_test_plan()
     payload = _valid_result(plan)
@@ -323,7 +299,6 @@ def test_validate_test_result_rejects_missing_required_field():
     assert missing in str(exc_info.value)
 
 
-@_pending
 def test_validate_test_result_rejects_all_fields_missing():
     with pytest.raises(TestPlanError) as exc_info:
         validate_test_result({})
@@ -332,7 +307,6 @@ def test_validate_test_result_rejects_all_fields_missing():
         assert field in msg
 
 
-@_pending
 def test_validate_test_result_rejects_empty_required_value():
     plan = load_acceptance_test_plan()
     payload = _valid_result(plan)
@@ -342,7 +316,6 @@ def test_validate_test_result_rejects_empty_required_value():
         validate_test_result(payload)
 
 
-@_pending
 def test_validate_test_result_rejects_none_required_value():
     plan = load_acceptance_test_plan()
     payload = _valid_result(plan)
@@ -352,7 +325,6 @@ def test_validate_test_result_rejects_none_required_value():
         validate_test_result(payload)
 
 
-@_pending
 def test_validate_test_result_rejects_unknown_case_id():
     plan = load_acceptance_test_plan()
     payload = _valid_result(plan)
@@ -366,7 +338,6 @@ def test_validate_test_result_rejects_unknown_case_id():
     assert unknown in str(exc_info.value)
 
 
-@_pending
 def test_validate_test_result_rejects_disallowed_status():
     plan = load_acceptance_test_plan()
     payload = _valid_result(plan)
@@ -377,7 +348,6 @@ def test_validate_test_result_rejects_disallowed_status():
     assert "flaky" in str(exc_info.value) or "status" in str(exc_info.value).lower()
 
 
-@_pending
 def test_validate_test_result_reports_multiple_missing_fields():
     plan = load_acceptance_test_plan()
     payload = _valid_result(plan)
@@ -392,7 +362,6 @@ def test_validate_test_result_reports_multiple_missing_fields():
         assert f in msg
 
 
-@_pending
 def test_validate_test_result_non_dict_error_names_actual_type():
     with pytest.raises(TestPlanError) as exc_info:
         validate_test_result("not a dict")  # type: ignore[arg-type]

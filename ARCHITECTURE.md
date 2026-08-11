@@ -148,3 +148,33 @@ of the market-intelligence agent (PRODMARKET-5).
 - Any exception class whose name starts with `Test` (e.g.
   `TestPlanError`) must carry `__test__ = False` so pytest does not try
   to collect it as a test class.
+
+- **PRODMARKET-6** Step-005 [DEV][Acceptance Test Plan] Implement feature behavior to satisfy tests — src/market_intel/acceptance_test_plan.py, tests/test_acceptance_test_plan.py
+
+Delivered the production implementation of the Acceptance Test Plan (ATP)
+and unblocked the previously xfailed behaviour tests (PRODMARKET-6).
+
+**Files:**
+- `src/market_intel/acceptance_test_plan.py` — real implementations of
+  `load_acceptance_test_plan()` and `validate_test_result()`. The plan returns
+  a deterministic `AcceptanceTestPlan` with 7 `AcceptanceCase` entries
+  spanning `happy_path`, `edge_case`, and `regression` categories, every
+  MVP requirement (MVP-R1..MVP-R4) covered by at least one case, unique
+  non-empty ids (ATP-C1..ATP-C7), GWT clauses filled in, and
+  `required_result_fields` of `(case_id, status, executed_at, evidence)`.
+- `tests/test_acceptance_test_plan.py` — the 33 behaviour tests introduced
+  in PRODMARKET-5 have had their `xfail(strict=True, raises=NotImplementedError)`
+  markers removed and now assert real behaviour on every run. Full file:
+  39 tests, all passing.
+
+**Behaviour highlights:**
+- `load_acceptance_test_plan()` is a pure factory over module-level constants,
+  so repeated calls return equal `AcceptanceTestPlan` instances (satisfies
+  the determinism requirement).
+- `validate_test_result(payload)` rejects non-dicts (naming the actual type),
+  missing required fields (aggregating every offending field into the error),
+  empty required values (`None` or empty string), unknown `case_id`s (naming
+  the value), and disallowed statuses. Extra fields are permitted and the
+  payload is not mutated.
+- Acceptance intent satisfied: financial analysts receive detailed market
+  movement insights via ATP-C3 (happy_path, covers MVP-R3).
