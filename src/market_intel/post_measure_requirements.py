@@ -65,15 +65,55 @@ class PostMeasureSpec:
     requirements: tuple[MeasureRequirement, ...]
 
 
+_CANONICAL_REQUIREMENTS: tuple[MeasureRequirement, ...] = (
+    MeasureRequirement(
+        id="PMR-R1",
+        title="Measurement Accuracy Gate",
+        description=(
+            "Each market measurement must be validated for accuracy and correctness "
+            "against known reference values or precision thresholds before being accepted."
+        ),
+        category="accuracy",
+    ),
+    MeasureRequirement(
+        id="PMR-R2",
+        title="Data Completeness Gate",
+        description=(
+            "All required fields of a measurement result must be present with no missing "
+            "or null values to ensure full coverage of the market data contract."
+        ),
+        category="completeness",
+    ),
+    MeasureRequirement(
+        id="PMR-R3",
+        title="Measurement Timeliness Gate",
+        description=(
+            "Market measurements must meet freshness and staleness thresholds so that "
+            "time-sensitive financial analysis is never performed on delayed data."
+        ),
+        category="timeliness",
+    ),
+    MeasureRequirement(
+        id="PMR-R4",
+        title="Result Consistency Gate",
+        description=(
+            "Repeated measurements under identical conditions must produce consistent and "
+            "deterministically stable results to support reproducible financial analysis."
+        ),
+        category="consistency",
+    ),
+)
+
+
 def load_post_measure_spec() -> PostMeasureSpec:
     """Return the canonical, immutable post-measure spec.
 
     Deterministic: repeated calls return equal :class:`PostMeasureSpec` instances.
-
-    Raises:
-        NotImplementedError: Until the implementation ticket lands.
     """
-    raise NotImplementedError("Pending PRODMARKET-10 implementation")
+    return PostMeasureSpec(
+        required_result_fields=_REQUIRED_RESULT_FIELDS,
+        requirements=_CANONICAL_REQUIREMENTS,
+    )
 
 
 def validate_measure_result(payload: dict[str, Any]) -> None:
@@ -86,9 +126,26 @@ def validate_measure_result(payload: dict[str, Any]) -> None:
         PostMeasureError: If ``payload`` is not a dict, is missing any
             required result field, or has empty values (``None`` or empty
             string) for required fields.
-        NotImplementedError: Until the implementation ticket lands.
     """
-    raise NotImplementedError("Pending PRODMARKET-10 implementation")
+    if not isinstance(payload, dict):
+        raise PostMeasureError(
+            f"payload must be a dict, got {type(payload).__name__}"
+        )
+
+    spec = load_post_measure_spec()
+    violations: list[str] = []
+
+    for field in spec.required_result_fields:
+        if field not in payload:
+            violations.append(field)
+        elif payload[field] is None or payload[field] == "":
+            violations.append(field)
+
+    if violations:
+        raise PostMeasureError(
+            f"measure result payload missing or empty required fields: "
+            f"{', '.join(violations)}"
+        )
 
 
 __all__ = [
