@@ -279,3 +279,163 @@ previously-shipped components into a validated end-to-end journey (PRODMARKET-15
   on-call, validate health checks, open post-mortem ticket).
 - Cross-module integration: all MVP requirements are covered by ATP cases; all
   production release categories are covered by deployment gates.
+
+## Current Structure
+src/market_intel/acceptance_test_plan.py:
+⋮
+│class TestPlanError(ValueError):
+⋮
+│@dataclass(frozen=True)
+│class AcceptanceCase:
+⋮
+│@dataclass(frozen=True)
+│class AcceptanceTestPlan:
+⋮
+│def load_acceptance_test_plan() -> AcceptanceTestPlan:
+⋮
+│def validate_test_result(payload: dict[str, Any]) -> None:
+⋮
+
+src/market_intel/config.py:
+⋮
+│class ConfigError(RuntimeError):
+⋮
+│@dataclass(frozen=True)
+│class Settings:
+│    env: str
+⋮
+│    @classmethod
+│    def from_env(cls, source: dict[str, str] | None = None) -> "Settings":
+⋮
+
+src/market_intel/implementation_roadmap.py:
+⋮
+│class RoadmapError(ValueError):
+⋮
+│@dataclass(frozen=True)
+│class RoadmapMilestone:
+⋮
+│@dataclass(frozen=True)
+│class ImplementationRoadmap:
+⋮
+│def load_implementation_roadmap() -> ImplementationRoadmap:
+⋮
+│def validate_roadmap_progress(payload: dict[str, Any]) -> None:
+⋮
+
+src/market_intel/market_intensity_agent.py:
+⋮
+│class MarketIntensityError(ValueError):
+⋮
+│@dataclass(frozen=True)
+│class MarketSignal:
+⋮
+│@dataclass(frozen=True)
+│class MarketIntensitySpec:
+⋮
+│def load_market_intensity_spec() -> MarketIntensitySpec:
+⋮
+│def analyze_market_intensity(payload: dict[str, Any]) -> None:
+⋮
+
+src/market_intel/mvp_requirements.py:
+⋮
+│class RequirementsError(ValueError):
+⋮
+│@dataclass(frozen=True)
+│class Requirement:
+⋮
+│@dataclass(frozen=True)
+│class MVPSpec:
+⋮
+│def load_mvp_spec() -> MVPSpec:
+⋮
+│def validate_forecast_shape(payload: dict[str, Any]) -> None:
+⋮
+
+src/market_intel/post_measure_requirements.py:
+⋮
+│class PostMeasureError(ValueError):
+⋮
+│@dataclass(frozen=True)
+│class MeasureRequirement:
+⋮
+│@dataclass(frozen=True)
+│class PostMeasureSpec:
+⋮
+│def load_post_measure_spec() -> PostMeasureSpec:
+⋮
+│def validate_measure_result(payload: dict[str, Any]) -> None:
+⋮
+
+src/market_intel/production_release_requirements.py:
+⋮
+│class ReleaseRequirementsError(ValueError):
+⋮
+│@dataclass(frozen=True)
+│class ReleaseRequirement:
+⋮
+│@dataclass(frozen=True)
+│class ProductionReleaseSpec:
+⋮
+│def load_production_release_spec() -> ProductionReleaseSpec:
+⋮
+│def validate_release_readiness(payload: dict[str, Any]) -> None:
+⋮
+
+src/market_intel/release_readiness.py:
+⋮
+│class ReleaseReadinessError(ValueError):
+⋮
+│@dataclass(frozen=True)
+│class E2EFlow:
+⋮
+│@dataclass(frozen=True)
+│class E2EFlowResult:
+⋮
+│@dataclass(frozen=True)
+│class DeploymentGate:
+⋮
+│@dataclass(frozen=True)
+│class ReleaseReadinessSpec:
+⋮
+│def load_release_readiness_spec() -> ReleaseReadinessSpec:
+⋮
+│def validate_e2e_flow_result(payload: Any) -> None:
+⋮
+│def validate_deployment_readiness(payload: Any) -> None:
+⋮
+
+tests/test_release_readiness.py:
+⋮
+│class TestValidateE2EFlowResult:
+│    def _valid_payload(self) -> dict:
+│        spec = load_release_readiness_spec()
+│        return {
+│            "flow_id": spec.flows[0].id,
+│            "status": "passed",
+│            "executed_at": "2026-08-11T00:00:00Z",
+│            "evidence": "All service calls succeeded",
+⋮
+
+tests/test_setup_verification.py:
+⋮
+│def _parse_env_file(path: Path) -> dict[str, str]:
+⋮
+│def test_env_example_exists():
+⋮
+│def test_env_example_declares_required_keys():
+⋮
+│def test_env_example_keys_are_shouty_snake_case():
+⋮
+│def test_verify_script_is_executable():
+⋮
+│def test_verify_script_succeeds_on_clean_checkout():
+⋮
+│def test_verify_script_fails_when_env_example_missing(tmp_path: Path):
+⋮
+│def test_python_version_matches_pyproject():
+⋮
+
+## Change Log
+- **PRODMARKET-15** Step-014 [E2E] End-to-end integration and release readiness
