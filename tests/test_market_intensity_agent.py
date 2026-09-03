@@ -466,3 +466,95 @@ def test_analyze_market_intensity_rejects_payload_with_unknown_signal_id_categor
     del payload[spec.required_analysis_fields[0]]
     with pytest.raises(MarketIntensityError):
         analyze_market_intensity(payload)
+
+
+# ---------------------------------------------------------------------------
+# Additional edge-case and coverage tests
+# ---------------------------------------------------------------------------
+
+
+def test_analyze_market_intensity_reports_mixed_missing_and_empty_fields():
+    """A payload with both missing and empty required fields reports all issues."""
+    spec = load_market_intensity_spec()
+    payload = {name: f"value-{name}" for name in spec.required_analysis_fields}
+    payload["intensity_score"] = 0.5
+    # Remove first field (missing) and set second to empty string
+    del payload[spec.required_analysis_fields[0]]
+    payload[spec.required_analysis_fields[1]] = ""
+    with pytest.raises(MarketIntensityError) as exc_info:
+        analyze_market_intensity(payload)
+    msg = str(exc_info.value)
+    assert spec.required_analysis_fields[0] in msg
+    assert spec.required_analysis_fields[1] in msg
+
+
+def test_analyze_market_intensity_accepts_false_as_required_value():
+    """False is a non-empty value and must be accepted."""
+    spec = load_market_intensity_spec()
+    payload = {name: f"value-{name}" for name in spec.required_analysis_fields}
+    payload["intensity_score"] = 0.5
+    payload[spec.required_analysis_fields[0]] = False
+    analyze_market_intensity(payload)  # must not raise
+
+
+def test_analyze_market_intensity_empty_dict_rejects_all_required_fields():
+    """An empty dict must list every required field in the error message."""
+    spec = load_market_intensity_spec()
+    with pytest.raises(MarketIntensityError) as exc_info:
+        analyze_market_intensity({})
+    msg = str(exc_info.value)
+    for field in spec.required_analysis_fields:
+        assert field in msg
+
+
+def test_analyze_market_intensity_returns_none():
+    """analyze_market_intensity returns None on success."""
+    spec = load_market_intensity_spec()
+    payload = {name: f"value-{name}" for name in spec.required_analysis_fields}
+    payload["intensity_score"] = 0.5
+    result = analyze_market_intensity(payload)
+    assert result is None
+
+
+def test_analyze_market_intensity_accepts_whitespace_only_strings_for_all_fields():
+    """Whitespace-only strings are not considered empty and must be accepted."""
+    spec = load_market_intensity_spec()
+    payload = {name: "  " for name in spec.required_analysis_fields}
+    payload["intensity_score"] = 0.5
+    analyze_market_intensity(payload)  # must not raise
+
+
+def test_market_intensity_spec_immutable_required_analysis_fields():
+    """MarketIntensitySpec cannot have its required_analysis_fields reassigned."""
+    spec = load_market_intensity_spec()
+    with pytest.raises(dataclasses.FrozenInstanceError):
+        spec.required_analysis_fields = ()  # type: ignore[misc]
+
+
+def test_market_intensity_spec_immutable_signals():
+    """MarketIntensitySpec cannot have its signals tuple reassigned."""
+    spec = load_market_intensity_spec()
+    with pytest.raises(dataclasses.FrozenInstanceError):
+        spec.signals = ()  # type: ignore[misc]
+
+
+def test_analyze_market_intensity_rejects_multiple_none_values():
+    """Multiple fields set to None must all be reported in the error."""
+    spec = load_market_intensity_spec()
+    payload = {name: f"value-{name}" for name in spec.required_analysis_fields}
+    payload["intensity_score"] = 0.5
+    payload[spec.required_analysis_fields[0]] = None
+    payload[spec.required_analysis_fields[1]] = None
+    with pytest.raises(MarketIntensityError) as exc_info:
+        analyze_market_intensity(payload)
+    msg = str(exc_info.value)
+    assert spec.required_analysis_fields[0] in msg
+    assert spec.required_analysis_fields[1] in msg
+
+
+def test_analyze_market_intensity_negative_intensity_score_accepted():
+    """Negative intensity_score is a valid numeric value and must be accepted."""
+    spec = load_market_intensity_spec()
+    payload = {name: f"value-{name}" for name in spec.required_analysis_fields}
+    payload["intensity_score"] = -0.5
+    analyze_market_intensity(payload)  # must not raise
