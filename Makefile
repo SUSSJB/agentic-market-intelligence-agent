@@ -3,6 +3,10 @@
 PYTHON ?= python3
 VENV ?= .venv
 BIN := $(VENV)/bin
+# Preferred test runner is the venv's pytest; fall back to whatever pytest is on
+# PATH so the cumulative test suite stays runnable even on a fresh clone where
+# `make setup` has not been run yet.
+PYTEST := $(if $(wildcard $(BIN)/pytest),$(BIN)/pytest,pytest)
 
 help:
 	@echo "Targets:"
@@ -21,7 +25,7 @@ verify:
 	bash scripts/verify_setup.sh
 
 test:
-	$(BIN)/pytest
+	$(PYTEST)
 
 lint:
 	$(BIN)/ruff check .
