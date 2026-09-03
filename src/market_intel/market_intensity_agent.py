@@ -102,6 +102,24 @@ _SIGNALS: tuple[MarketSignal, ...] = (
         ),
         category="sentiment",
     ),
+    MarketSignal(
+        id="MIA-R5",
+        title="Crypto Overnight Futures Volume",
+        description=(
+            "Tracks BTC and ETH overnight futures contract volume and open interest to detect"
+            " institutional flow and overnight liquidity shifts in crypto markets."
+        ),
+        category="volume",
+    ),
+    MarketSignal(
+        id="MIA-R6",
+        title="Crypto Overnight Futures Funding Rate",
+        description=(
+            "Monitors perpetual futures funding rates and basis spread for BTC and ETH to"
+            " quantify overnight volatility pressure and leverage imbalance in crypto."
+        ),
+        category="volatility",
+    ),
 )
 
 _SPEC = MarketIntensitySpec(

@@ -378,3 +378,91 @@ def test_market_intensity_error_carries_message():
 def test_market_intensity_error_is_catchable_as_valueerror():
     with pytest.raises(ValueError):
         raise MarketIntensityError("bad payload")
+
+
+# ---------------------------------------------------------------------------
+# Crypto overnight futures signal source — behaviour tests
+# ---------------------------------------------------------------------------
+
+
+def test_load_market_intensity_spec_contains_crypto_signal_ids():
+    spec = load_market_intensity_spec()
+    ids = {s.id for s in spec.signals}
+    assert {"MIA-R5", "MIA-R6"}.issubset(ids), (
+        f"spec must include crypto signal ids MIA-R5 and MIA-R6, got {ids}"
+    )
+
+
+def test_load_market_intensity_spec_has_crypto_overnight_futures_volume_signal():
+    spec = load_market_intensity_spec()
+    crypto_volume = [
+        s
+        for s in spec.signals
+        if s.id == "MIA-R5" and s.category == "volume"
+    ]
+    assert crypto_volume, "spec must include a volume signal (MIA-R5) for crypto overnight futures"
+    text = " ".join((s.title + " " + s.description).lower() for s in crypto_volume)
+    assert any(kw in text for kw in ("crypto", "btc", "eth", "overnight", "futures"))
+
+
+def test_load_market_intensity_spec_has_crypto_overnight_futures_volatility_signal():
+    spec = load_market_intensity_spec()
+    crypto_vol = [
+        s
+        for s in spec.signals
+        if s.id == "MIA-R6" and s.category == "volatility"
+    ]
+    assert crypto_vol, "spec must include a volatility signal (MIA-R6) for crypto overnight futures"
+    text = " ".join((s.title + " " + s.description).lower() for s in crypto_vol)
+    assert any(kw in text for kw in ("crypto", "btc", "eth", "overnight", "futures", "funding"))
+
+
+def test_load_market_intensity_spec_crypto_signals_titles_and_descriptions_non_empty():
+    spec = load_market_intensity_spec()
+    crypto_ids = {"MIA-R5", "MIA-R6"}
+    for s in spec.signals:
+        if s.id in crypto_ids:
+            assert s.title.strip(), f"crypto signal {s.id} has empty title"
+            assert s.description.strip(), f"crypto signal {s.id} has empty description"
+
+
+def test_load_market_intensity_spec_crypto_signals_are_from_allowed_categories():
+    spec = load_market_intensity_spec()
+    allowed = {"volume", "volatility", "momentum", "sentiment"}
+    crypto_ids = {"MIA-R5", "MIA-R6"}
+    bad = [s for s in spec.signals if s.id in crypto_ids and s.category not in allowed]
+    assert not bad, f"crypto signals with disallowed category: {bad}"
+
+
+def test_load_market_intensity_spec_total_signals_at_least_six():
+    spec = load_market_intensity_spec()
+    assert len(spec.signals) >= 6, (
+        f"spec must have at least 6 signals (4 equities + 2 crypto), "
+        f"got {len(spec.signals)}"
+    )
+
+
+# ---------------------------------------------------------------------------
+# Edge-case and failure-path tests for crypto signals
+# ---------------------------------------------------------------------------
+
+
+def test_analyze_market_intensity_crypto_signal_id_accepted():
+    """A payload referencing a crypto signal id is accepted."""
+    spec = load_market_intensity_spec()
+    payload = {name: f"value-{name}" for name in spec.required_analysis_fields}
+    payload["intensity_score"] = 0.88
+    payload["signal_id"] = "MIA-R5"
+    analyze_market_intensity(payload)  # must not raise
+
+
+def test_analyze_market_intensity_rejects_payload_with_unknown_signal_id_category_mismatch():
+    """A payload with a crypto signal_id but missing required fields still fails validation."""
+    spec = load_market_intensity_spec()
+    payload = {name: f"value-{name}" for name in spec.required_analysis_fields}
+    payload["intensity_score"] = 0.5
+    payload["signal_id"] = "MIA-R5"
+    # Remove the first required field to trigger failure
+    del payload[spec.required_analysis_fields[0]]
+    with pytest.raises(MarketIntensityError):
+        analyze_market_intensity(payload)
