@@ -1,0 +1,16 @@
+{
+  "lld:components": {
+    "values": [
+      "Data ingestion service",
+      "Real-time data processing module",
+      "Historical analysis engine",
+      "Overnight cues aggregation system",
+      "Forecast generation algorithm",
+      "Probability calibration module",
+      "Directional prediction model",
+      "Gap range calculation tool"
+    ],
+    "updatedAt": "2026-09-03T09:04:42.850Z",
+    "source": "DEVELOPMENT:lld-mid-development-revision"
+  }
+}

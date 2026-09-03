@@ -436,6 +436,6 @@ tests/test_setup_verification.py:
 ⋮
 │def test_python_version_matches_pyproject():
 ⋮
-
 ## Change Log
+- **PRODMARKET-12** Step-011 [DEV][Market-Intensity Agent] Implement feature behavior to satisfy tests — The implementation for PRODMARKET-12 was already present on the branch (commit b2a4c08) from a prior pass, including both the 4 original equities signals (MIA-R1..MIA-R4) and the 2 crypto overnight futures signals (MIA-R5: volume, MIA-R6: volatility) plus 53 tests covering spec behaviour and analyze_market_intensity validation. The only change made in this pass was fixing 2 ruff E501 lint violatio…
 - **PRODMARKET-15** Step-014 [E2E] End-to-end integration and release readiness
