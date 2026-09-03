@@ -6,10 +6,14 @@ sentiment intensity signals derived from market data.
 
 Public surface:
     * :class:`MarketSignal` -- a single market-intensity signal (frozen dataclass).
-    * :class:`MarketIntensitySpec` -- the canonical, immutable market-intensity spec (frozen dataclass).
-    * :class:`MarketIntensityError` -- raised when an intensity analysis payload violates the contract.
-    * :func:`load_market_intensity_spec` -- returns the deterministic market-intensity spec.
-    * :func:`analyze_market_intensity` -- validates a candidate intensity analysis payload.
+    * :class:`MarketIntensitySpec` -- the canonical, immutable market-intensity
+      spec (frozen dataclass).
+    * :class:`MarketIntensityError` -- raised when an intensity analysis payload
+      violates the contract.
+    * :func:`load_market_intensity_spec` -- returns the deterministic
+      market-intensity spec.
+    * :func:`analyze_market_intensity` -- validates a candidate intensity
+      analysis payload.
 """
 from __future__ import annotations
 
